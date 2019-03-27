@@ -8,6 +8,7 @@ using OxyPlot.Series;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using GalaSoft.MvvmLight.CommandWpf;
+using ImageEditor.Filters.Functional;
 
 namespace ImageEditor.ViewModel
 {
@@ -151,7 +152,7 @@ namespace ImageEditor.ViewModel
             S1.Points.AddRange(new []{new DataPoint(0,0),new DataPoint(255,255)});           
             foreach (var point in GetPointsFromIntervalWithGivenStepSize(5))
             {
-                var newPoint = SelectedFilter.Transform((byte) point);
+                var newPoint = SelectedFilter.Transform((byte) point, (byte)point, (byte)point).R;
                 S1.Points.Add(new DataPoint(point, newPoint));
             }
 

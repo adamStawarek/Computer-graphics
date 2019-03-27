@@ -57,6 +57,9 @@
     <Reference Include="MaterialDesignThemes.Wpf, Version=2.5.0.1205, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MaterialDesignThemes.2.5.0.1205\lib\net45\MaterialDesignThemes.Wpf.dll</HintPath>
     </Reference>
+    <Reference Include="MoreLinq, Version=3.1.0.0, Culture=neutral, PublicKeyToken=384d532d7e88985d, processorArchitecture=MSIL">
+      <HintPath>..\packages\morelinq.3.1.0\lib\net451\MoreLinq.dll</HintPath>
+    </Reference>
     <Reference Include="OxyPlot, Version=2.0.0.0, Culture=neutral, PublicKeyToken=638079a8f0bd61e9, processorArchitecture=MSIL">
       <HintPath>..\packages\OxyPlot.Core.2.0.0-unstable1035\lib\net45\OxyPlot.dll</HintPath>
     </Reference>
@@ -75,6 +78,9 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.4.0\lib\net461\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\MvvmLightLibs.5.4.1.1\lib\net45\System.Windows.Interactivity.dll</HintPath>
     </Reference>
@@ -96,26 +102,29 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Filters\Functional\AverageDithering.cs" />
     <Compile Include="Filters\ConvolutionFilterBase.cs" />
-    <Compile Include="Filters\CustomFilter.cs" />
+    <Compile Include="Filters\Functional\CustomFilter.cs" />
     <Compile Include="Filters\FunctionalFilterBase.cs" />
-    <Compile Include="Filters\MedianFilter.cs" />
+    <Compile Include="Filters\Convolution\MedianFilter.cs" />
     <Compile Include="Helpers\FunctionHelper.cs" />
+    <Compile Include="Helpers\PrimaryColor.cs" />
     <Compile Include="ViewModel\FilterDesignerViewModel.cs" />
+    <Compile Include="Filters\Interfaces\IParamized.cs" />
     <Compile Include="Views\Converters\BitmapToImageSource.cs" />
     <Compile Include="Views\Converters\NullToVisibilityConverter.cs" />
-    <Compile Include="Filters\Blur.cs" />
-    <Compile Include="Filters\Brightness.cs" />
-    <Compile Include="Filters\ColorInversion.cs" />
-    <Compile Include="Filters\Contrast.cs" />
-    <Compile Include="Filters\Emboss.cs" />
-    <Compile Include="Filters\GammaCorrection.cs" />
-    <Compile Include="Filters\GaussianSmoothing.cs" />
+    <Compile Include="Filters\Convolution\Blur.cs" />
+    <Compile Include="Filters\Functional\Brightness.cs" />
+    <Compile Include="Filters\Functional\ColorInversion.cs" />
+    <Compile Include="Filters\Functional\Contrast.cs" />
+    <Compile Include="Filters\Convolution\Emboss.cs" />
+    <Compile Include="Filters\Functional\GammaCorrection.cs" />
+    <Compile Include="Filters\Convolution\GaussianSmoothing.cs" />
     <Compile Include="Filters\Interfaces\IError.cs" />
     <Compile Include="ViewModel\Helpers\ColorUnderPixel .cs" />
     <Compile Include="Helpers\LogService.cs" />
-    <Compile Include="Filters\Sharpen.cs" />
-    <Compile Include="Filters\DiagonalEdgeDetection.cs" />
+    <Compile Include="Filters\Convolution\Sharpen.cs" />
+    <Compile Include="Filters\Convolution\DiagonalEdgeDetection.cs" />
     <Compile Include="ViewModel\Helpers\FiltersListViewItem.cs" />
     <Compile Include="Helpers\IntegerExtensions.cs" />
     <Compile Include="Properties\Annotations.cs" />

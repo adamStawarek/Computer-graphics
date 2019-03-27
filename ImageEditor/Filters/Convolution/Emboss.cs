@@ -1,4 +1,4 @@
-﻿namespace ImageEditor.Filters
+﻿namespace ImageEditor.Filters.Convolution
 {
     //South emboss
     public class Emboss : ConvolutionFilterBase {

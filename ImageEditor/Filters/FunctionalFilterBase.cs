@@ -12,9 +12,12 @@ namespace ImageEditor.Filters
     public abstract class FunctionalFilterBase:IFilter
     {
         public abstract string Name { get; }
-        public abstract byte Transform(byte rgbVal);
+        public abstract Color Transform(byte r,byte g, byte b);
+        protected Bitmap ProcessedBitmap { get; private set; }
         public Bitmap Filter(Bitmap processedBitmap)
-        {       
+        {
+            ProcessedBitmap = processedBitmap;
+            SetUpBeforeFiltering();           
             unsafe
             {
                 BitmapData bitmapData = processedBitmap.LockBits(new Rectangle(0, 0, processedBitmap.Width, processedBitmap.Height), ImageLockMode.ReadWrite, processedBitmap.PixelFormat);
@@ -32,15 +35,16 @@ namespace ImageEditor.Filters
                         int oldBlue = currentLine[x];
                         int oldGreen = currentLine[x + 1];
                         int oldRed = currentLine[x + 2];
-
-                        currentLine[x] = Transform((byte)oldBlue);
-                        currentLine[x + 1] = Transform((byte)oldGreen);
-                        currentLine[x + 2] = Transform((byte)oldRed);
+                        var result=Transform((byte)oldRed, (byte)oldGreen,(byte)oldBlue);
+                        currentLine[x] = result.B;
+                        currentLine[x + 1] = result.G;
+                        currentLine[x + 2] = result.R;
                     }
                 });
                 processedBitmap.UnlockBits(bitmapData);
                 return processedBitmap;
             }
-        }       
+        }
+        protected virtual void SetUpBeforeFiltering(){}
     }
 }

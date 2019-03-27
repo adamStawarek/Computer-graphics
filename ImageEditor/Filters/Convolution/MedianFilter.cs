@@ -1,11 +1,11 @@
-﻿using ImageEditor.Filters.Interfaces;
-using ImageEditor.Helpers;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using ImageEditor.Filters.Interfaces;
+using ImageEditor.Helpers;
 using Color = System.Drawing.Color;
 
-namespace ImageEditor.Filters
+namespace ImageEditor.Filters.Convolution
 {
     public class MedianFilter : IFilter
     {

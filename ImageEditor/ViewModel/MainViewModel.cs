@@ -11,26 +11,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
-using MedianFilter = ImageEditor.Filters.MedianFilter;
+using ImageEditor.Filters.Convolution;
+using ImageEditor.Filters.Functional;
+using MedianFilter = ImageEditor.Filters.Convolution.MedianFilter;
+using System;
 
 namespace ImageEditor.ViewModel
 {
     public class MainViewModel : ViewModelBase
     {
-        private List<FiltersListViewItem> AllFilters = new List<FiltersListViewItem>
-        {
-            new FiltersListViewItem(new Brightness()),
-            new FiltersListViewItem(new ColorInversion()),
-            new FiltersListViewItem(new Contrast()),
-            new FiltersListViewItem(new DiagonalEdgeDetection()),
-            new FiltersListViewItem(new GaussianSmoothing()),
-            new FiltersListViewItem(new Sharpen()),
-            new FiltersListViewItem(new Blur()),
-            new FiltersListViewItem(new Emboss()),
-            new FiltersListViewItem(new GammaCorrection()),
-            new FiltersListViewItem(new MedianFilter())
-
-        };
+        #region properties
+        private List<FiltersListViewItem> AllFilters = new List<FiltersListViewItem>();
 
         public static MainViewModel Instance { get; set; } //used to update Bitamp, in other View Models
         private Bitmap _orginBitmap;
@@ -70,7 +61,8 @@ namespace ImageEditor.ViewModel
                 _rgbVal = value;
                 RaisePropertyChanged("RgbVal");
             }
-        }
+        } 
+        #endregion
 
         #region relay commands
 
@@ -88,6 +80,8 @@ namespace ImageEditor.ViewModel
         public MainViewModel()
         {
             Instance = this;
+
+            SetUpFilters();
 
             FunctionalFiltersView = CollectionViewSource.GetDefaultView(AllFilters.Where(FunctionalFilter));
             ConvolutionFiltersView = CollectionViewSource.GetDefaultView(AllFilters.Where(ConvolutionFilter));
@@ -107,6 +101,17 @@ namespace ImageEditor.ViewModel
                     e.NoErrorOccured += delegate { modification.ErrorMessage = e.ErrorMessage; };
                 }
             }
+        }
+
+        private void SetUpFilters()
+        {
+            var interfaceType = typeof(IFilter);
+            var filters = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(x => x.GetTypes())
+                .Where(x => interfaceType.IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract 
+                            && x.GetConstructor(Type.EmptyTypes)!=null)//if null the parametless constructor doesn't exsist
+                .Select(x => (IFilter)Activator.CreateInstance(x)).ToList();
+            filters.ForEach(f=>AllFilters.Add(new FiltersListViewItem(f)));
         }
 
         #region file opening/saving
@@ -187,24 +192,13 @@ namespace ImageEditor.ViewModel
 
         private bool FunctionalFilter(FiltersListViewItem arg)
         {
-            return
-                   arg.Filter.GetType().IsEquivalentTo(typeof(Brightness)) ||
-                   arg.Filter.GetType().IsEquivalentTo(typeof(ColorInversion)) ||
-                   arg.Filter.GetType().IsEquivalentTo(typeof(Contrast)) ||
-                   arg.Filter.GetType().IsEquivalentTo(typeof(GammaCorrection));
-
+            return arg.Filter.GetType().IsSubclassOf(typeof(FunctionalFilterBase));
         }
 
         private bool ConvolutionFilter(FiltersListViewItem arg)
         {
-            return
-                   arg.Filter.GetType().IsEquivalentTo(typeof(GaussianSmoothing)) ||
-                   arg.Filter.GetType().IsEquivalentTo(typeof(Sharpen)) ||
-                   arg.Filter.GetType().IsEquivalentTo(typeof(Blur)) ||
-                   arg.Filter.GetType().IsEquivalentTo(typeof(Emboss)) ||
-                   arg.Filter.GetType().IsEquivalentTo(typeof(DiagonalEdgeDetection))||
-                   arg.Filter.GetType().IsEquivalentTo(typeof(MedianFilter));
-
+            return arg.Filter.GetType().IsSubclassOf(typeof(ConvolutionFilterBase))||
+            arg.Filter.GetType().IsEquivalentTo(typeof(MedianFilter));
         }
 
         private void SetCurrentPixelValuesToRgbBox(object obj)

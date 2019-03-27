@@ -1,4 +1,4 @@
-﻿namespace ImageEditor.Filters
+﻿namespace ImageEditor.Filters.Convolution
 {
     public class Sharpen : ConvolutionFilterBase
     {
