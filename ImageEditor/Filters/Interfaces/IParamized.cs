@@ -4,6 +4,6 @@ namespace ImageEditor.Filters.Interfaces
 {
     public interface IParameterized
     {
-       Dictionary<string,string> Parameters { get; set; }
+       List<Parameter> Parameters { get; set; }
     }
 }

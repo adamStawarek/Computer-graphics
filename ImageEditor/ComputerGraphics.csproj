@@ -107,11 +107,13 @@
     <Compile Include="Filters\Functional\CustomFilter.cs" />
     <Compile Include="Filters\FunctionalFilterBase.cs" />
     <Compile Include="Filters\Convolution\MedianFilter.cs" />
+    <Compile Include="Filters\Parameter.cs" />
     <Compile Include="Helpers\FunctionHelper.cs" />
     <Compile Include="Helpers\PrimaryColor.cs" />
     <Compile Include="ViewModel\FilterDesignerViewModel.cs" />
     <Compile Include="Filters\Interfaces\IParamized.cs" />
     <Compile Include="Views\Converters\BitmapToImageSource.cs" />
+    <Compile Include="Views\Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="Views\Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Filters\Convolution\Blur.cs" />
     <Compile Include="Filters\Functional\Brightness.cs" />
