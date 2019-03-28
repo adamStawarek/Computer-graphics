@@ -117,6 +117,7 @@
     <Compile Include="Filters\Interfaces\IParamized.cs" />
     <Compile Include="Views\Converters\BitmapToImageSource.cs" />
     <Compile Include="Views\Converters\BoolToVisibilityConverter.cs" />
+    <Compile Include="Views\Converters\ColorToBrushesConverter.cs" />
     <Compile Include="Views\Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Filters\Convolution\Blur.cs" />
     <Compile Include="Filters\Functional\Brightness.cs" />

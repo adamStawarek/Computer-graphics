@@ -1,14 +1,18 @@
 using System;
 using System.Globalization;
-using System.Windows;
 using System.Windows.Data;
+using System.Windows.Media;
+using Color = System.Drawing.Color;
 
 namespace ImageEditor.Views.Converters
 {
-    public class NullToVisibilityConverter : IValueConverter {
+    public class ColorToBrushesConverter : IValueConverter
+    {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value == null ? Visibility.Collapsed : Visibility.Visible;
+            if(value is Color c)
+                return new SolidColorBrush(System.Windows.Media.Color.FromArgb(c.A,c.R,c.G,c.B));
+            return null;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

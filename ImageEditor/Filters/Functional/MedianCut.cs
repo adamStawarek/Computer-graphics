@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Threading.Tasks;
+using System.Windows;
 using ImageEditor.Filters.Interfaces;
+using OxyPlot;
 
 namespace ImageEditor.Filters.Functional
 {
@@ -14,6 +17,8 @@ namespace ImageEditor.Filters.Functional
         private readonly List<MedianCutCube> _cubeList;
         public readonly Dictionary<Color, int> Cache;
         public List<Parameter> Parameters { get; set; }
+        public ObservableCollection<Color> RepresentativeColors { get; set; }=new ObservableCollection<Color>();
+
         public override string Name => "Median Cut";
 
         public MedianCut()
@@ -33,7 +38,7 @@ namespace ImageEditor.Filters.Functional
         {
             Clear();
             SetUpColors();
-            SetUpColorPalette(int.Parse(Parameters[0].Value));
+            SetUpColorPalette(int.Parse(Parameters[0].Value)).ForEach(r=>Application.Current.Dispatcher.Invoke(() => RepresentativeColors.Add(r)));
         }
 
         public void SetUpColors()
@@ -128,6 +133,7 @@ namespace ImageEditor.Filters.Functional
 
         public void Clear()
         {
+            Application.Current.Dispatcher.Invoke(() => RepresentativeColors.Clear());
             Cache.Clear();
             _cubeList.Clear();
             _colorList.Clear();

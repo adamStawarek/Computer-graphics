@@ -17,7 +17,7 @@
     <Window.Resources>
         <converters:BitmapToImageSource x:Key="BitmapToImageSource"/>
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
-        <converters:BoolToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:ColorToBrushesConverter x:Key="ColorToBrushesConverter"/>
         <DataTemplate DataType="{x:Type ItemsControl}" x:Key="FilterListItemTemplate">
             <StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
@@ -44,10 +44,30 @@
                                 <ComboBox ItemsSource="{Binding  PossibleValues}" VerticalAlignment="Top" FontSize="16"
                                           Width="100" SelectedItem="{Binding Value,Mode=TwoWay}"/>
                             </StackPanel>
-                            
+
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+
+                <ListBox ItemsSource="{Binding Filter.RepresentativeColors,UpdateSourceTrigger=PropertyChanged}"
+                         Margin="20,10,0,0" Width="400" HorizontalAlignment="Left">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel x:Name="wrapPanel" Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Margin"
+                                    Value="0" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel  HorizontalAlignment="Stretch" Height="40" Width="40"  Background="{Binding .,Converter={StaticResource ColorToBrushesConverter}}"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
                 <TextBlock Visibility="{Binding ErrorMessage,Converter={StaticResource NullToVisibilityConverter}}" 
                            Text="{Binding ErrorMessage,Mode=TwoWay}"  HorizontalAlignment="Left"
                            FontSize="16" Foreground="OrangeRed" FontWeight="DemiBold"/>
@@ -199,7 +219,7 @@
                                     </i:Interaction.Triggers>
                                 </Button>
                             </StackPanel>
-                           
+
                         </StackPanel>
                     </Expander>
                 </StackPanel>
