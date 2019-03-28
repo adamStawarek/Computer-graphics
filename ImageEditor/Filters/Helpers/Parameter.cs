@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ImageEditor.Filters
+namespace ImageEditor.Filters.Helpers
 {
     public class Parameter
     {

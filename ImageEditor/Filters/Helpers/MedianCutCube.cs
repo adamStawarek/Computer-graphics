@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Linq;
 using MoreLinq.Extensions;
 
-namespace ImageEditor.Filters
+namespace ImageEditor.Filters.Helpers
 {
     public class MedianCutCube
     {

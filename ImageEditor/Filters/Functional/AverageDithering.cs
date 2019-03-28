@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Threading.Tasks;
+using ImageEditor.Filters.Helpers;
 
 namespace ImageEditor.Filters.Functional
 {
