@@ -48,7 +48,7 @@ namespace ImageEditor.Filters.Functional
         public override Color Transform(byte r, byte g, byte b)
         {
             var (lowerBound, upperBound) = GetClosestGreyLevel(greyLevels, Color.FromArgb(r, g, b));
-            var intensity = (r + g + b) / 3;
+            var intensity = (byte)(0.3 * r + 0.6 * g + 0.1 * b);
             var index = greyLevels.IndexOf(lowerBound);
             if (intensity <= thresholds[index])
             {
@@ -78,7 +78,7 @@ namespace ImageEditor.Filters.Functional
                         int blue = currentLine[x];
                         int green = currentLine[x + 1];
                         int red = currentLine[x + 2];
-                        var intensity = (red + green + blue) / 3;
+                        var intensity = (byte)(0.3 * red + 0.6 * green + 0.1 * blue);
                         if ((intensity >= min) && (intensity <= max))
                         {
                             threshold += intensity;
@@ -108,7 +108,7 @@ namespace ImageEditor.Filters.Functional
         public (byte lowerbound, byte upperbound) GetClosestGreyLevel(List<byte> levels, Color color)
         {
 
-            var intensity = (byte)((color.R + color.G + color.B) / 3);
+            var intensity = (byte)(0.3 * color.R + 0.6 * color.G + 0.1 * color.B);
             if (intensity == byte.MaxValue)
                 return (levels.OrderByDescending(l => l).ElementAt(1), byte.MaxValue);
             var max = levels.Where(l => l - intensity > 0).MinBy(l => l - intensity).First();

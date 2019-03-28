@@ -107,6 +107,9 @@
     <Compile Include="Filters\Functional\CustomFilter.cs" />
     <Compile Include="Filters\FunctionalFilterBase.cs" />
     <Compile Include="Filters\Convolution\MedianFilter.cs" />
+    <Compile Include="Filters\Interfaces\IResult.cs" />
+    <Compile Include="Filters\MedianCutCube.cs" />
+    <Compile Include="Filters\Functional\MedianCut.cs" />
     <Compile Include="Filters\Parameter.cs" />
     <Compile Include="Helpers\FunctionHelper.cs" />
     <Compile Include="Helpers\PrimaryColor.cs" />
