@@ -1,5 +1,5 @@
 # Project for Computer Graphics
-![image](basicView.PNG)
+![basic app view](readme.images/basic.PNG)
 
 ## Version 1.0
 ### Functional filters:
@@ -19,5 +19,5 @@
 * Edge detection(diagonal)
 
 ### Functional filter designer:
-![designer](designerv1.PNG)
-![designer](designerv2.PNG)
+![custom designer](readme.images/designer_custom.PNG)
+![existing filters designer](readme.images/designer_existing_filters.PNG)
