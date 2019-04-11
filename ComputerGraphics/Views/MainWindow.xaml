@@ -89,7 +89,8 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0" Margin="10">
-                <Grid Background="{DynamicResource MaterialDesignPaper}" AllowDrop="True" x:Name="Grid">
+                <views:CanvasView  HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <!--<Grid Background="{DynamicResource MaterialDesignPaper}" AllowDrop="True" x:Name="Grid">
                     <Image Stretch="None"  
                        Tag="Image" x:Name="Image" 
                        Source="{Binding Bitmap,Converter={StaticResource BitmapToImageSource},NotifyOnSourceUpdated=True}" >
@@ -106,7 +107,7 @@
                             <command:EventToCommand PassEventArgsToCommand="True" Command="{Binding DropFilesCommand}"/>
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
-                </Grid>
+                </Grid>-->
                 <Popup x:Name="PopupBox" Placement="Top" PlacementTarget="{Binding ElementName=Image}">
                     <Grid Background="AliceBlue">
                         <Label Content="{Binding RgbVal}" FontSize="22"/>
