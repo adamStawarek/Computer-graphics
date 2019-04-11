@@ -15,6 +15,7 @@
         Title="Image Editor" WindowStartupLocation="CenterScreen" 
         MinHeight="800" MinWidth="1200" Icon="/ImageEditor;component/Icon.png" WindowState="Maximized">
     <Window.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:BitmapToImageSource x:Key="BitmapToImageSource"/>
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <converters:ColorToBrushesConverter x:Key="ColorToBrushesConverter"/>
@@ -89,39 +90,55 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0" Margin="10">
-                <views:CanvasView  HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                <!--<Grid Background="{DynamicResource MaterialDesignPaper}" AllowDrop="True" x:Name="Grid">
-                    <Image Stretch="None"  
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="50"/>
+                </Grid.RowDefinitions>
+                <views:CanvasView  HorizontalAlignment="Left" VerticalAlignment="Top"
+                                   Visibility="{Binding IsChecked,ElementName=RbDisplaySwitch,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter='Inverse'}"/>
+                <Grid Grid.Row="0" Visibility="{Binding IsChecked,ElementName=RbDisplaySwitch,Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid Background="{DynamicResource MaterialDesignPaper}" AllowDrop="True" x:Name="Grid">
+                        <Image Stretch="None"  
                        Tag="Image" x:Name="Image" 
                        Source="{Binding Bitmap,Converter={StaticResource BitmapToImageSource},NotifyOnSourceUpdated=True}" >
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="MouseMove">
+                                    <command:EventToCommand PassEventArgsToCommand="True" Command="{Binding OpenPopupCommand}"/>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </Image>
+                        <fa:ImageAwesome Icon="Spinner" Visibility="{Binding SpinnerVisibility}" Foreground="{DynamicResource PrimaryHueDarkBrush}"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center" Spin="True" Height="80" Width="80" />
                         <i:Interaction.Triggers>
-                            <i:EventTrigger EventName="MouseMove">
-                                <command:EventToCommand PassEventArgsToCommand="True" Command="{Binding OpenPopupCommand}"/>
+                            <i:EventTrigger EventName="Drop">
+                                <command:EventToCommand PassEventArgsToCommand="True" Command="{Binding DropFilesCommand}"/>
                             </i:EventTrigger>
                         </i:Interaction.Triggers>
-                    </Image>
-                    <fa:ImageAwesome Icon="Spinner" Visibility="{Binding SpinnerVisibility}" Foreground="{DynamicResource PrimaryHueDarkBrush}"
-                                     HorizontalAlignment="Center" VerticalAlignment="Center" Spin="True" Height="80" Width="80" />
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="Drop">
-                            <command:EventToCommand PassEventArgsToCommand="True" Command="{Binding DropFilesCommand}"/>
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
-                </Grid>-->
-                <Popup x:Name="PopupBox" Placement="Top" PlacementTarget="{Binding ElementName=Image}">
-                    <Grid Background="AliceBlue">
-                        <Label Content="{Binding RgbVal}" FontSize="22"/>
                     </Grid>
-                    <Popup.Style>
-                        <Style>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding ElementName=Image,Path=IsMouseOver}" Value="True">
-                                    <Setter Property="Popup.IsOpen" Value="True"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Popup.Style>
-                </Popup>
+                    <Popup x:Name="PopupBox" Placement="Top" PlacementTarget="{Binding ElementName=Image}">
+                        <Grid Background="AliceBlue">
+                            <Label Content="{Binding RgbVal}" FontSize="22"/>
+                        </Grid>
+                        <Popup.Style>
+                            <Style>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=Image,Path=IsMouseOver}" Value="True">
+                                        <Setter Property="Popup.IsOpen" Value="True"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Popup.Style>
+                    </Popup>
+                </Grid>
+                <Grid  HorizontalAlignment="Stretch" Grid.Row="1" Background="White">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Label FontSize="16" Foreground="Black" Content="Canvas " VerticalAlignment="Center"/>
+                        <ToggleButton Style="{StaticResource MaterialDesignSwitchLightToggleButton}" 
+                                  x:Name="RbDisplaySwitch"/>
+                        <Label FontSize="16" Foreground="Black" Content="Image " VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+
             </Grid>
             <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
             <materialDesign:Card Grid.Column="2" Margin="10">

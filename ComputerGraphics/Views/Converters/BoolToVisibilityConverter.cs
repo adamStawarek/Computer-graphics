@@ -9,6 +9,9 @@ namespace ImageEditor.Views.Converters{
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+
+            if (parameter is string s && s=="Inverse")
+                return value != null && (bool)value ? Visibility.Collapsed:Visibility.Visible;
             return value != null && (bool)value ? Visibility.Visible : Visibility.Collapsed;
         }
 

@@ -15,6 +15,8 @@ namespace ImageEditor.ViewModel
         private const int BitmapHeight = 800;
         private readonly byte[,,] _pixels = new byte[BitmapHeight, BitmapWidth, 4];
         private int _stride;
+        private Point? _lastPoint;
+
         public RelayCommand<object> ClickCommand { get; private set; }
 
         public WriteableBitmap Bitmap
@@ -36,27 +38,73 @@ namespace ImageEditor.ViewModel
         private void Click(object obj)
         {
             var e = obj as MouseButtonEventArgs;
-            System.Windows.Point p = e.GetPosition(((IInputElement)e.Source));
-             var XY = $"X: {(int) p.X} Y:{(int) p.Y}";
-            MessageBox.Show(XY);
-            for(int i=-10;i<10;i++)
-                for (int j = -10; j < 10; j++)
-                    for (int k = 0; k < 3; k++)
-                        _pixels[(int)p.Y+j, (int)p.X+i, k] = 0;
+            var p = e.GetPosition(((IInputElement)e.Source));
+            DrawPoint(p,3);
+            if (_lastPoint == null)
+                _lastPoint = p;
+            else
+            {
+                DrawLine(p, (Point)_lastPoint);
+                _lastPoint = null;
+            }
             SetBitmap();
+        }
+
+        private void DrawLine(Point p1, Point p2)
+        {
+            double dy = p2.Y - p1.Y;
+            double dx = p2.X - p1.X;
+            double m = dy / dx;
+            double y = (int)p1.X<(int)p2.X?p1.Y:p2.Y;
+
+            int beginX;
+            int endX;
+            if ((int) p1.X < (int) p2.X)
+            {
+                beginX = (int)p1.X;
+                endX = (int) p2.X;
+            }
+            else
+            {
+                beginX = (int)p2.X;
+                endX = (int)p1.X;
+            }
+                
+            for (int x = beginX; x <= endX; ++x)
+            {
+                DrawPoint(new Point(x, Round(y)),1);
+                y += m;
+            }
            
+        }
+
+        private void DrawPoint(Point p,int offset)
+        {
+            for (int i = -offset; i < offset; i++)
+                for (int j = -offset; j < offset; j++)
+                    for (int k = 0; k < 3; k++)
+                        _pixels[(int)p.Y + j, (int)p.X + i, k] = 0;
+        }
+
+        private double Round(double y)
+        {
+            return y < 0 ? y - 0.5 : y + 0.5;
         }
 
         private void InitializeBitmap()
         {
-            // Clear to black.
+            const int canvasColor = byte.MaxValue-10;
             for (int row = 0; row < BitmapHeight; row++)
             {
                 for (int col = 0; col < BitmapWidth; col++)
                 {
                     for (int i = 0; i < 3; i++)
-                        _pixels[row, col, i] = Byte.MaxValue-10;
-                    _pixels[row, col, 3] = Byte.MaxValue;
+                    {
+                       
+                        _pixels[row, col, i] = canvasColor;
+                    }
+
+                    _pixels[row, col, 3] = byte.MaxValue;
                 }
             }
             SetBitmap();
