@@ -11,6 +11,7 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="250"/>
         </Grid.ColumnDefinitions>
         <Image Stretch="None" Margin="0" 
             Source="{Binding Bitmap,NotifyOnSourceUpdated=True}" Grid.Column="0" >
@@ -20,5 +21,22 @@
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </Image>
+        <StackPanel VerticalAlignment="Stretch" Grid.Column="1" Background="White">
+            <StackPanel.Resources>
+                <Style TargetType="RadioButton">
+                    <Setter Property="FontSize" Value="16"/>
+                    <Setter Property="Margin" Value="10,20,0,0"/>
+                    <Setter Property="Cursor" Value="Hand"/>
+                    <Setter Property="GroupName" Value="RbShapes"></Setter>
+                </Style>
+            </StackPanel.Resources>
+            <ItemsControl ItemsSource="{Binding RasterGraphics}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <RadioButton Content="{Binding Type}" IsChecked="{Binding IsSelected,Mode=TwoWay}"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
     </Grid>
 </UserControl>
