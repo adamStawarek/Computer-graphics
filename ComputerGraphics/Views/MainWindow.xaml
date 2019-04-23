@@ -130,15 +130,16 @@
                         </Popup.Style>
                     </Popup>
                 </Grid>
-                <Grid  HorizontalAlignment="Stretch" Grid.Row="1" Background="White">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Label FontSize="16" Foreground="Black" Content="Canvas " VerticalAlignment="Center"/>
-                        <ToggleButton Style="{StaticResource MaterialDesignSwitchLightToggleButton}" 
+                <Border BorderThickness="0,1,0,0" Grid.Row="1" BorderBrush="LightGray">
+                    <Grid  HorizontalAlignment="Stretch"  Background="White">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Label FontSize="16" Foreground="Black" Content="Canvas " VerticalAlignment="Center"/>
+                            <ToggleButton Style="{StaticResource MaterialDesignSwitchLightToggleButton}" 
                                   x:Name="RbDisplaySwitch"/>
-                        <Label FontSize="16" Foreground="Black" Content="Image " VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Grid>
-
+                            <Label FontSize="16" Foreground="Black" Content="Image " VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </Grid>
             <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
             <materialDesign:Card Grid.Column="2" Margin="10">
