@@ -82,6 +82,9 @@ namespace ImageEditor.ViewModel
                 case "Antialiased Line Generation":
                     WuLine(point, (Point)_lastPoint);
                     break;
+                case "Midpoint circle":
+                    MidpointCircleV2(point, (Point)_lastPoint);
+                    break;
                 default:
                     break;
             }
@@ -115,6 +118,53 @@ namespace ImageEditor.ViewModel
 
         }
 
+        private void MidpointCircleV2(Point p1, Point p2)
+        {
+            var radius = (int)Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2));
+            int centerX = (int)p2.X;
+            int centerY = (int)p2.Y;
+
+            int dE = 3;
+            int dSE = 5 - 2 * radius;
+            int d = 1 - radius;
+            int x = 0;
+            int y = radius;
+            if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY + y), 0);
+            if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY - y), 0);
+            if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY + y), 0);
+            if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY - y), 0);
+            if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY + x), 0);
+            if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY - x), 0);
+            if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x), 0);
+            if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x), 0);
+            while (y > x)
+            {
+                if (d < 0) //move to E
+                {
+                    d += dE;
+                    dE += 2;
+                    dSE += 2;
+                }
+                else //move to SE
+                {
+                    d += dSE;
+                    dE += 2;
+                    dSE += 4;
+                    --y;
+                }
+                ++x;
+                if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY + y), 0);
+                if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY - y), 0);
+                if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY + y), 0);
+                if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY - y), 0);
+                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY + x), 0);
+                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY - x), 0);
+                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x), 0);
+                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x), 0);
+            }
+
+        }
+
         private void WuLine(Point p1,Point p2)
         {
             //var steep = Math.Abs(y1 - y0) > Math.Abs(x1 - x0);
@@ -144,8 +194,8 @@ namespace ImageEditor.ViewModel
             double y = p1.Y + gradient;
             for (var x = p1.X + 1; x <= p2.X - 1; x++)
             {
-                DrawPoint(new Point(x, (int)y), 1,(byte)((1 - (y - (int)y))*byte.MaxValue));
-                DrawPoint(new Point(x, (int)y + 1), 1 ,(byte)((y - (int)y)*byte.MaxValue));
+                DrawPoint(new Point(x, (int)y), 0,(byte)((1 - (y - (int)y))*byte.MaxValue));
+                DrawPoint(new Point(x, (int)y + 1), 0 ,(byte)((y - (int)y)*byte.MaxValue));
                 y += gradient;
             }
         }
@@ -164,11 +214,18 @@ namespace ImageEditor.ViewModel
 
         private void DrawPoint(Point p, int offset=1,byte intensity=0)
         {
+            if (offset == 0)
+            {
+                for (int k = 0; k < 3; k++)
+                    _pixels[(int)p.Y, (int)p.X, k] = intensity;
+                return;
+            }
+
             for (int i = -offset; i < offset; i++)
             for (int j = -offset; j < offset; j++)
             for (int k = 0; k < 3; k++)
                 _pixels[(int) p.Y + j, (int) p.X + i, k] = intensity;
-        }
+        }     
 
         #region bitmap initalization & clear
         private void ResetBitmap()
