@@ -206,16 +206,35 @@ namespace ImageEditor.ViewModel
                 p2.Y = tmpY;
             }
 
+            byte L = 0;
+            byte B = CanvasColor; /*Background Color*/
             double dx = p2.X - p1.X;
             double dy = p2.Y - p1.Y;
-            double gradient = dy / dx;
-            double y = p1.Y + gradient;
-            for (var x = p1.X + 1; x <= p2.X - 1; x++)
+            double m = dy / dx;
+            if (Math.Abs(m) < 1)
             {
-                DrawPoint(new Point(x, (int)y), 0, (byte)((1 - (y - (int)y)) * byte.MaxValue));
-                DrawPoint(new Point(x, (int)y + 1), 0, (byte)((y - (int)y) * byte.MaxValue));
-                y += gradient;
+                double y = p1.Y;
+                for (var x = p1.X; x <= p2.X; ++x)
+                {
+                    var c1 = L * (1 - (y - (int)y)) + B * (y - (int)y);
+                    var c2 = L * (y - (int)y) + B * (1 - (y - (int)y));
+                    DrawPoint(new Point(x, Math.Floor(y)), 0, (byte)c1);
+                    DrawPoint(new Point(x, Math.Floor(y) + 1), 0, (byte)c2);
+                    y += m;
+                }
             }
+            else
+            {
+                double x = p1.X;
+                for (var y = p1.Y; y <= p2.Y; ++y)
+                {
+                    var c1 = L * (1 - (x - (int)x)) + B * (x - (int)x);
+                    var c2 = L * (x - (int)x) + B * (1 - (x - (int)x));
+                    DrawPoint(new Point(Math.Floor(x),y), 0, (byte)c1);
+                    DrawPoint(new Point(Math.Floor(x) + 1,y), 0, (byte)c2);
+                    x += 1/m;
+                }
+            }            
         }
 
         private void WuCircle(Point p1, Point p2)
