@@ -12,6 +12,8 @@
              DataContext="{Binding Source={StaticResource Locator}, Path=Canvas}">
     <UserControl.Resources>
         <converters:RasterGraphicNameToVisibilityConverter x:Key="RasterGraphicNameToVisibilityConverter"/>
+        <converters:RasterGraphicNameLineToVisibilityConverter x:Key="RasterGraphicNameLineToVisibilityConverter"/>
+        <converters:RasterGraphicNameCircleToVisibilityConverter x:Key="RasterGraphicNameCircleToVisibilityConverter"/>
     </UserControl.Resources>
     <Grid x:Name="MainGrid">
         <Grid.ColumnDefinitions>
@@ -49,6 +51,24 @@
                                 Visibility="{Binding Type,Converter={StaticResource RasterGraphicNameToVisibilityConverter}}"
                                 ItemsSource="{Binding DataContext.ThicknessValues,ElementName=MainGrid}"
                                 SelectedItem="{Binding DataContext.SelectedThickness,ElementName=MainGrid,Mode=TwoWay}"/>
+                            <ComboBox Width="100" FontSize="14"
+                                      Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                      materialDesign:HintAssist.Hint="size"
+                                      materialDesign:HintAssist.FloatingScale="1"
+                                      materialDesign:HintAssist.FloatingOffset="0, -24"
+                                      Margin="10 10 0 0"
+                                      Visibility="{Binding Type,Converter={StaticResource RasterGraphicNameLineToVisibilityConverter}}"
+                                      ItemsSource="{Binding DataContext.LineSizeValues,ElementName=MainGrid}"
+                                      SelectedItem="{Binding DataContext.SelectedLineSize,ElementName=MainGrid,Mode=TwoWay}"/>
+                            <ComboBox Width="100" FontSize="14"
+                                      Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                      materialDesign:HintAssist.Hint="size"
+                                      materialDesign:HintAssist.FloatingScale="1"
+                                      materialDesign:HintAssist.FloatingOffset="0, -24"
+                                      Margin="10 10 0 0"
+                                      Visibility="{Binding Type,Converter={StaticResource RasterGraphicNameCircleToVisibilityConverter}}"
+                                      ItemsSource="{Binding DataContext.CircleSizeValues,ElementName=MainGrid}"
+                                      SelectedItem="{Binding DataContext.SelectedCircleSize,ElementName=MainGrid,Mode=TwoWay}"/>
                         </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
