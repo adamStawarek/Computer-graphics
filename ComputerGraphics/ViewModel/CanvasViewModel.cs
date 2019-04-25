@@ -95,25 +95,51 @@ namespace ImageEditor.ViewModel
             double dy = p2.Y - p1.Y;
             double dx = p2.X - p1.X;
             double m = dy / dx;
-            double y = (int) p1.X < (int) p2.X ? p1.Y : p2.Y;
+           
 
-            int beginX;
-            int endX;
-            if ((int) p1.X < (int) p2.X)
+            if (Math.Abs(m)<1)//x is increasing more than y
             {
-                beginX = (int) p1.X;
-                endX = (int) p2.X;
+                double y = (int) p1.X < (int) p2.X ? p1.Y : p2.Y;
+                int beginX;
+                int endX;
+                if ((int)p1.X < (int)p2.X)
+                {
+                    beginX = (int)p1.X;
+                    endX = (int)p2.X;
+                }
+                else
+                {
+                    beginX = (int)p2.X;
+                    endX = (int)p1.X;
+                }
+
+                for (int x = beginX; x <= endX; ++x)
+                {
+                    DrawPoint(new Point(x, y), 0);
+                    y += m;
+                }
             }
             else
             {
-                beginX = (int) p2.X;
-                endX = (int) p1.X;
-            }
+                double x = (int)p1.Y < (int)p2.Y ? p1.X : p2.X;
+                int beginY;
+                int endY;
+                if ((int)p1.Y < (int)p2.Y)
+                {
+                    beginY = (int)p1.Y;
+                    endY = (int)p2.Y;
+                }
+                else
+                {
+                    beginY = (int)p2.Y;
+                    endY = (int)p1.Y;
+                }
 
-            for (int x = beginX; x <= endX; ++x)
-            {
-                DrawPoint(new Point(x, Round(y)), 1);
-                y += m;
+                for (int y = beginY; y <= endY; ++y)
+                {
+                    DrawPoint(new Point(x,y), 0);
+                    x += 1/m;
+                }
             }
 
         }
@@ -166,18 +192,7 @@ namespace ImageEditor.ViewModel
         }
 
         private void WuLine(Point p1,Point p2)
-        {
-            //var steep = Math.Abs(y1 - y0) > Math.Abs(x1 - x0);
-            //if (steep)
-            //{
-            //    Swap(ref x0, ref y0);
-            //    Swap(ref x1, ref y1);
-            //}
-            //if (x0 > x1)
-            //{                
-            //    Swap(ref x0, ref x1);
-            //    Swap(ref y0, ref y1);
-            //}
+        {         
             if (p1.X > p2.X)
             {
                 var tmpX = p1.X;
@@ -198,18 +213,6 @@ namespace ImageEditor.ViewModel
                 DrawPoint(new Point(x, (int)y + 1), 0 ,(byte)((y - (int)y)*byte.MaxValue));
                 y += gradient;
             }
-        }
-
-        public void Swap<T>(ref T lhs, ref T rhs)
-        {
-            T temp = lhs;
-            lhs = rhs;
-            rhs = temp;
-        }
-
-        private double Round(double y)
-        {
-            return y < 0 ? y - 0.5 : y + 0.5;
         }
 
         private void DrawPoint(Point p, int offset=1,byte intensity=0)
