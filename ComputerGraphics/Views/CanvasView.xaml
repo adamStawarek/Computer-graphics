@@ -7,9 +7,13 @@
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:command="http://www.galasoft.ch/mvvmlight"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:ImageEditor.Views.Converters"
              mc:Ignorable="d"         
              DataContext="{Binding Source={StaticResource Locator}, Path=Canvas}">
-    <Grid>
+    <UserControl.Resources>
+        <converters:RasterGraphicNameToVisibilityConverter x:Key="RasterGraphicNameToVisibilityConverter"/>
+    </UserControl.Resources>
+    <Grid x:Name="MainGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="250"/>
@@ -34,7 +38,18 @@
             <ItemsControl ItemsSource="{Binding RasterGraphics}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <RadioButton Content="{Binding Type}" IsChecked="{Binding IsSelected,Mode=TwoWay}"/>
+                        <StackPanel>
+                            <RadioButton Content="{Binding Type}" IsChecked="{Binding IsSelected,Mode=TwoWay}"/>
+                            <ComboBox Width="100" FontSize="14"
+                                      Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                      materialDesign:HintAssist.Hint="thickness"
+                                      materialDesign:HintAssist.FloatingScale="1"
+                                      materialDesign:HintAssist.FloatingOffset="0, -24"
+                                      Margin="10 10 0 0"
+                                Visibility="{Binding Type,Converter={StaticResource RasterGraphicNameToVisibilityConverter}}"
+                                ItemsSource="{Binding DataContext.ThicknessValues,ElementName=MainGrid}"
+                                SelectedItem="{Binding DataContext.SelectedThickness,ElementName=MainGrid,Mode=TwoWay}"/>
+                        </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
