@@ -1,13 +1,13 @@
-﻿using System;
+﻿using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.CommandWpf;
+using ImageEditor.ViewModel.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using GalaSoft.MvvmLight;
 using System.Windows.Media.Imaging;
-using GalaSoft.MvvmLight.CommandWpf;
-using ImageEditor.ViewModel.Helpers;
 
 namespace ImageEditor.ViewModel
 {
@@ -45,27 +45,27 @@ namespace ImageEditor.ViewModel
             new RasterGraphicViewModel("Pixel copying", false),
             new RasterGraphicViewModel("Antialiased Line Generation", false),
             new RasterGraphicViewModel("Antialiased Circle Generation", false)
-        }; 
+        };
         #endregion
 
         public CanvasViewModel()
         {
             ClickCommand = new RelayCommand<object>(Click);
-            ClearCanvasCommand=new RelayCommand(ResetBitmap);
+            ClearCanvasCommand = new RelayCommand(ResetBitmap);
             ResetBitmap();
-        }  
+        }
 
         private void Click(object obj)
         {
             var e = obj as MouseButtonEventArgs;
-            var p = e.GetPosition(((IInputElement) e.Source));
+            var p = e.GetPosition(((IInputElement)e.Source));
             DrawPoint(p, 3);
             if (_lastPoint == null)
                 _lastPoint = p;
             else
             {
                 DrawShape(p);
-               
+
                 _lastPoint = null;
             }
             SetBitmap();
@@ -77,10 +77,13 @@ namespace ImageEditor.ViewModel
             switch (rasterGraphic?.Type)
             {
                 case "Digital Differential Analyzer":
-                    DDALine(point, (Point) _lastPoint);
+                    DDALine(point, (Point)_lastPoint);
                     break;
                 case "Antialiased Line Generation":
                     WuLine(point, (Point)_lastPoint);
+                    break;
+                case "Antialiased Circle Generation":
+                    WuCircle(point, (Point)_lastPoint);
                     break;
                 case "Midpoint circle":
                     MidpointCircleV2(point, (Point)_lastPoint);
@@ -95,11 +98,11 @@ namespace ImageEditor.ViewModel
             double dy = p2.Y - p1.Y;
             double dx = p2.X - p1.X;
             double m = dy / dx;
-           
 
-            if (Math.Abs(m)<1)//x is increasing more than y
+
+            if (Math.Abs(m) < 1)//x is increasing more than y
             {
-                double y = (int) p1.X < (int) p2.X ? p1.Y : p2.Y;
+                double y = (int)p1.X < (int)p2.X ? p1.Y : p2.Y;
                 int beginX;
                 int endX;
                 if ((int)p1.X < (int)p2.X)
@@ -137,8 +140,8 @@ namespace ImageEditor.ViewModel
 
                 for (int y = beginY; y <= endY; ++y)
                 {
-                    DrawPoint(new Point(x,y), 0);
-                    x += 1/m;
+                    DrawPoint(new Point(x, y), 0);
+                    x += 1 / m;
                 }
             }
 
@@ -191,8 +194,8 @@ namespace ImageEditor.ViewModel
 
         }
 
-        private void WuLine(Point p1,Point p2)
-        {         
+        private void WuLine(Point p1, Point p2)
+        {
             if (p1.X > p2.X)
             {
                 var tmpX = p1.X;
@@ -209,13 +212,61 @@ namespace ImageEditor.ViewModel
             double y = p1.Y + gradient;
             for (var x = p1.X + 1; x <= p2.X - 1; x++)
             {
-                DrawPoint(new Point(x, (int)y), 0,(byte)((1 - (y - (int)y))*byte.MaxValue));
-                DrawPoint(new Point(x, (int)y + 1), 0 ,(byte)((y - (int)y)*byte.MaxValue));
+                DrawPoint(new Point(x, (int)y), 0, (byte)((1 - (y - (int)y)) * byte.MaxValue));
+                DrawPoint(new Point(x, (int)y + 1), 0, (byte)((y - (int)y) * byte.MaxValue));
                 y += gradient;
             }
         }
 
-        private void DrawPoint(Point p, int offset=1,byte intensity=0)
+        private void WuCircle(Point p1, Point p2)
+        {
+            var radius = (int)Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2));
+            int centerX = (int)p2.X;
+            int centerY = (int)p2.Y;
+
+            byte L = 0;
+            byte B = CanvasColor; /*Background Color*/
+            int x = radius;
+            int y = 0;
+            if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY + y), 0,L);
+            if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY - y), 0,L);
+            if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY + y), 0,L);
+            if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY - y), 0,L);
+            if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY + x), 0,L);
+            if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY - x), 0,L);
+            if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x), 0,L);
+            if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x), 0,L);
+            while (x > y)
+            {
+                ++y;
+                x = (int)Math.Ceiling(Math.Sqrt(radius * radius - y * y));
+                float T =(float)(x- Math.Sqrt(radius * radius - y * y));
+                var c2 =(byte)(L * (1 - T) + B * T);
+                var c1 = (byte)(L * T + B * (1 - T));
+
+                if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY + y), 0, c2);
+                if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY - y), 0, c2);
+                if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY + y), 0, c2);
+                if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY - y), 0, c2);
+                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY + x), 0, c2);
+                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY - x), 0, c2);
+                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x), 0, c2);
+                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x), 0, c2);
+
+                if (centerX + x-1 >= 0 && centerX + x-1 <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x-1, centerY + y), 0, c1);
+                if (centerX + x-1 >= 0 && centerX + x-1 <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x-1, centerY - y), 0, c1);
+                if (centerX - x-1 >= 0 && centerX - x-1 <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x-1, centerY + y), 0, c1);
+                if (centerX - x-1 >= 0 && centerX - x-1 <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x-1, centerY - y), 0, c1);
+                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY + x-1 >= 0 && centerY + x-1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY + x-1), 0, c1);
+                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY - x-1 >= 0 && centerY - x-1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY - x-1), 0, c1);
+                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x-1 >= 0 && centerY + x-1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x-1), 0, c1);
+                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x-1 >= 0 && centerY - x-1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x-1), 0, c1);               
+            }
+
+
+        }
+
+        private void DrawPoint(Point p, int offset = 1, byte intensity = 0)
         {
             if (offset == 0)
             {
@@ -225,10 +276,10 @@ namespace ImageEditor.ViewModel
             }
 
             for (int i = -offset; i < offset; i++)
-            for (int j = -offset; j < offset; j++)
-            for (int k = 0; k < 3; k++)
-                _pixels[(int) p.Y + j, (int) p.X + i, k] = intensity;
-        }     
+                for (int j = -offset; j < offset; j++)
+                    for (int k = 0; k < 3; k++)
+                        _pixels[(int)p.Y + j, (int)p.X + i, k] = intensity;
+        }
 
         #region bitmap initalization & clear
         private void ResetBitmap()
@@ -276,7 +327,7 @@ namespace ImageEditor.ViewModel
             _stride = 4 * ((BitmapWidth * tmp.Format.BitsPerPixel + 31) / 32);
             tmp.WritePixels(rect, pixels1d, _stride, 0);
             Bitmap = tmp;
-        } 
+        }
         #endregion
     }
 }
