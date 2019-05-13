@@ -33,8 +33,10 @@ namespace ImageEditor.ViewModel
         public List<int> LineSizeValues { get; set; } = new List<int> { 2,4};
         public int SelectedCircleSize { get; set; } = 2;
         public List<int> CircleSizeValues { get; set; } = new List<int> { 2,4};
-        public List<int> ThicknessValues { get; set; } = new List<int> { 1, 3, 5, 7 };
         public int SelectedThickness { get; set; } = 3;
+        public List<int> ThicknessValues { get; set; } = new List<int> { 1, 3, 5, 7 };
+        public int SelectedMidpointCircleThickness { get; set; } = 1;
+        public List<int> MidpointCircleThicknessValues { get; set; } = new List<int> { 1, 3, 5, 7 };
         public WriteableBitmap Bitmap
         {
             get => _bitmap;
@@ -497,14 +499,15 @@ namespace ImageEditor.ViewModel
             int d = 1 - radius;
             int x = 0;
             int y = radius;
-            if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY + y), 0);
-            if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY - y), 0);
-            if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY + y), 0);
-            if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY - y), 0);
-            if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY + x), 0);
-            if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY - x), 0);
-            if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x), 0);
-            if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x), 0);
+            var dict=new Dictionary<int,int>(){{1,0},{3,1},{5,2},{7,3}};
+            if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY + y), dict[SelectedMidpointCircleThickness]);
+            if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY - y), dict[SelectedMidpointCircleThickness]);
+            if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY + y), dict[SelectedMidpointCircleThickness]);
+            if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY - y), dict[SelectedMidpointCircleThickness]);
+            if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY + x), dict[SelectedMidpointCircleThickness]);
+            if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY - x), dict[SelectedMidpointCircleThickness]);
+            if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x), dict[SelectedMidpointCircleThickness]);
+            if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x), dict[SelectedMidpointCircleThickness]);
             while (y > x)
             {
                 if (d < 0) //move to E
@@ -521,14 +524,14 @@ namespace ImageEditor.ViewModel
                     --y;
                 }
                 ++x;
-                if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY + y), 0);
-                if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY - y), 0);
-                if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY + y), 0);
-                if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY - y), 0);
-                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY + x), 0);
-                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY - x), 0);
-                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x), 0);
-                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x), 0);
+                if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY + y), dict[SelectedMidpointCircleThickness]);
+                if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY - y), dict[SelectedMidpointCircleThickness]);
+                if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY + y), dict[SelectedMidpointCircleThickness]);
+                if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY - y), dict[SelectedMidpointCircleThickness]);
+                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY + x), dict[SelectedMidpointCircleThickness]);
+                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY - x), dict[SelectedMidpointCircleThickness]);
+                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x), dict[SelectedMidpointCircleThickness]);
+                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x), dict[SelectedMidpointCircleThickness]);
             }
 
         }
@@ -626,14 +629,14 @@ namespace ImageEditor.ViewModel
                 if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x), 0, c2);
                 if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x), 0, c2);
 
-                if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY + y), 0, c1);
-                if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY - y), 0, c1);
-                if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY + y), 0, c1);
-                if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY - y), 0, c1);
-                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY + x), 0, c1);
-                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY - x), 0, c1);
-                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x), 0, c1);
-                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x), 0, c1);
+                if (centerX + x-1 >= 0 && centerX + x-1 <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x-1, centerY + y), 0, c1);
+                if (centerX + x-1 >= 0 && centerX + x-1 <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x-1, centerY - y), 0, c1);
+                if (centerX - x-1 >= 0 && centerX - x-1 <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x-1, centerY + y), 0, c1);
+                if (centerX - x-1 >= 0 && centerX - x-1 <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x-1, centerY - y), 0, c1);
+                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY + x-1 >= 0 && centerY + x-1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY + x-1), 0, c1);
+                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY - x-1 >= 0 && centerY - x-1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY - x-1), 0, c1);
+                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x-1 >= 0 && centerY + x-1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x-1), 0, c1);
+                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x-1 >= 0 && centerY - x-1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x-1), 0, c1);
             }
 
 
