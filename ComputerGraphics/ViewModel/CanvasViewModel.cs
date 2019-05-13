@@ -8,6 +8,8 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using MoreLinq;
+using OxyPlot.Wpf;
 
 namespace ImageEditor.ViewModel
 {
@@ -18,6 +20,7 @@ namespace ImageEditor.ViewModel
         private WriteableBitmap _bitmap;
         private const int BitmapWidth = 1000;
         private const int BitmapHeight = 1000;
+        readonly List<(List<Point> points, bool isClosed)> polygons = new List<(List<Point>, bool)>();
         private readonly byte[,,] _pixels = new byte[BitmapHeight, BitmapWidth, 4];
         private int _stride;
         private Point? _lastPoint;
@@ -69,18 +72,117 @@ namespace ImageEditor.ViewModel
         {
             var e = obj as MouseButtonEventArgs;
             var p = e.GetPosition(((IInputElement)e.Source));
-            DrawPoint(p, 3);
-            if (_lastPoint == null)
-                _lastPoint = p;
-            else
-            {
-                DrawShape(p);
+            DrawPolygon(p);
+            //DrawPoint(p, 3);
+            //if (_lastPoint == null)
+            //    _lastPoint = p;
+            //else
+            //{
+            //    DrawShape(p);
 
-                _lastPoint = null;
-            }
+            //    _lastPoint = null;
+            //}
             SetBitmap();
         }
+      
+        private void DrawPolygon(Point point)
+        {
+            if (polygons.Count == 0 || polygons.All(p=>p.isClosed))
+            {
+                polygons.Add((new List<Point>(),false));
+            }
 
+            var polygon = polygons.First(p => !p.isClosed);
+            var points = polygon.points;
+
+            if (points.Count == 0)
+            {
+                points.Add(point);
+                DrawPoint(point, 3);
+            }
+            else if(points.First().DistanceTo(point)<5)
+            {
+                WuLine(points.First(), points.Last());
+                points.ForEach(p=>DrawPoint(p,3,127));
+                polygon.isClosed = true;
+                polygons.RemoveAt(polygons.Count-1);
+                
+                var isConvex = IsPolygonConvex(points);              
+                if (!isConvex)
+                {
+                    MessageBox.Show("Polygon is not convex, draw again");
+                    
+                    foreach (var p in points)
+                    {
+                        DrawPoint(p,3,255);
+                    }
+
+                    for (int i = 0; i < points.Count-1; i++)
+                    {
+                        ResetWuLine(points[i], points[i+1]);
+                    }                
+                    ResetWuLine(points.First(), points.Last());
+                }
+                else
+                {
+                    polygons.Add(polygon);
+                }
+            }
+            else
+            {
+                DrawPoint(point, 3);
+                WuLine(points.Last(),point);
+                points.Add(point);               
+            }               
+        }
+
+        public bool IsPolygonConvex(List<Point> points)
+        {
+            // For each set of three adjacent points A, B, C,
+            // find the cross product AB · BC. If the sign of
+            // all the cross products is the same, the angles
+            // are all positive or negative (depending on the
+            // order in which we visit them) so the polygon
+            // is convex.
+            bool got_negative = false;
+            bool got_positive = false;
+            int num_points = points.Count;
+            int B, C;
+            for (int A = 0; A < num_points; A++)
+            {
+                B = (A + 1) % num_points;
+                C = (B + 1) % num_points;
+
+                double cross_product =
+                    CrossProductLength(points[A],points[B],points[C]);
+                if (cross_product < 0)
+                {
+                    got_negative = true;
+                }
+                else if (cross_product > 0)
+                {
+                    got_positive = true;
+                }
+                if (got_negative && got_positive) return false;
+            }
+
+            // If we got this far, the polygon is convex.
+            return true;
+        }
+
+        public double CrossProductLength(Point A,Point B, Point C)
+        {
+            // Get the vectors' coordinates.
+            double BAx = A.X - B.X;
+            double BAy = A.Y - B.Y;
+            double BCx = C.X - B.X;
+            double BCy = C.Y - B.Y;
+
+            // Calculate the Z coordinate of the cross product.
+            return (BAx * BCy - BAy * BCx);
+        }
+
+        #region drawing lines & circles
         private void DrawShape(Point point)
         {
             var rasterGraphic = RasterGraphics.FirstOrDefault(r => r.IsSelected);
@@ -102,7 +204,7 @@ namespace ImageEditor.ViewModel
                     PixelCopy(point, (Point)_lastPoint);
                     break;
                 case "Super Sampling Line":
-                    SuperSamplingLine(point, (Point) _lastPoint);
+                    SuperSamplingLine(point, (Point)_lastPoint);
                     break;
                 case "Super Sampling Circle":
                     SuperSamplingCircle(point, (Point)_lastPoint);
@@ -167,7 +269,7 @@ namespace ImageEditor.ViewModel
             int d = 1 - radius;
             int x = 0;
             int y = radius;
-            if (centerX + x >= 0 && centerX + x <= tmp.Width - 1 && centerY + y >= 0 && centerY + y <= tmp.Height - 1) DrawPoint(new Point(centerX + x, centerY + y), _tmpPixels, SelectedCircleSize/2);
+            if (centerX + x >= 0 && centerX + x <= tmp.Width - 1 && centerY + y >= 0 && centerY + y <= tmp.Height - 1) DrawPoint(new Point(centerX + x, centerY + y), _tmpPixels, SelectedCircleSize / 2);
             if (centerX + x >= 0 && centerX + x <= tmp.Width - 1 && centerY - y >= 0 && centerY - y <= tmp.Height - 1) DrawPoint(new Point(centerX + x, centerY - y), _tmpPixels, SelectedCircleSize / 2);
             if (centerX - x >= 0 && centerX - x <= tmp.Width - 1 && centerY + y >= 0 && centerY + y <= tmp.Height - 1) DrawPoint(new Point(centerX - x, centerY + y), _tmpPixels, SelectedCircleSize / 2);
             if (centerX - x >= 0 && centerX - x <= tmp.Width - 1 && centerY - y >= 0 && centerY - y <= tmp.Height - 1) DrawPoint(new Point(centerX - x, centerY - y), _tmpPixels, SelectedCircleSize / 2);
@@ -192,7 +294,7 @@ namespace ImageEditor.ViewModel
                 }
                 ++x;
                 if (centerX + x >= 0 && centerX + x <= tmp.Width - 1 && centerY + y >= 0 && centerY + y <= tmp.Height - 1) DrawPoint(new Point(centerX + x, centerY + y), _tmpPixels, SelectedCircleSize / 2);
-                if (centerX + x >= 0 && centerX + x <= tmp.Width - 1 && centerY - y >= 0 && centerY - y <= tmp.Height - 1) DrawPoint(new Point(centerX + x, centerY - y), _tmpPixels, SelectedCircleSize/2);
+                if (centerX + x >= 0 && centerX + x <= tmp.Width - 1 && centerY - y >= 0 && centerY - y <= tmp.Height - 1) DrawPoint(new Point(centerX + x, centerY - y), _tmpPixels, SelectedCircleSize / 2);
                 if (centerX - x >= 0 && centerX - x <= tmp.Width - 1 && centerY + y >= 0 && centerY + y <= tmp.Height - 1) DrawPoint(new Point(centerX - x, centerY + y), _tmpPixels, SelectedCircleSize / 2);
                 if (centerX - x >= 0 && centerX - x <= tmp.Width - 1 && centerY - y >= 0 && centerY - y <= tmp.Height - 1) DrawPoint(new Point(centerX - x, centerY - y), _tmpPixels, SelectedCircleSize / 2);
                 if (centerX + y >= 0 && centerX + y <= tmp.Width - 1 && centerY + x >= 0 && centerY + x <= tmp.Height - 1) DrawPoint(new Point(centerX + y, centerY + x), _tmpPixels, SelectedCircleSize / 2);
@@ -299,7 +401,7 @@ namespace ImageEditor.ViewModel
 
                 for (int x = beginX; x <= endX; ++x)
                 {
-                    DrawPoint(new Point(x, y),_tmpPixels, SelectedLineSize/2);
+                    DrawPoint(new Point(x, y), _tmpPixels, SelectedLineSize / 2);
                     y += m;
                 }
             }
@@ -329,20 +431,20 @@ namespace ImageEditor.ViewModel
 
             #endregion
             #region map to orginal pixels
-            for (int row = 0,orgRow=0; row < newBitmapHeight-SelectedLineSize; row+=SelectedLineSize,orgRow++)
+            for (int row = 0, orgRow = 0; row < newBitmapHeight - SelectedLineSize; row += SelectedLineSize, orgRow++)
             {
-                for (int col = 0,orgCol=0; col < newBitmapWidth - SelectedLineSize; col+=SelectedLineSize,orgCol++)
+                for (int col = 0, orgCol = 0; col < newBitmapWidth - SelectedLineSize; col += SelectedLineSize, orgCol++)
                 {
                     int avg = 0;
                     for (int i = 0; i < SelectedLineSize; i++)
                     {
                         for (int j = 0; j < SelectedLineSize; j++)
                         {
-                            avg+=_tmpPixels[row+i, col+j, 0];
+                            avg += _tmpPixels[row + i, col + j, 0];
                         }
                     }
 
-                    avg = avg / (SelectedLineSize*SelectedLineSize);
+                    avg = avg / (SelectedLineSize * SelectedLineSize);
 
                     for (int i = 0; i < 3; i++)
                     {
@@ -357,7 +459,7 @@ namespace ImageEditor.ViewModel
             #endregion
         }
 
-        private void DrawPoint(Point p,byte[,,] pixels, int offset = 1, byte intensity = 0)
+        private void DrawPoint(Point p, byte[,,] pixels, int offset = 1, byte intensity = 0)
         {
             if (offset == 0)
             {
@@ -367,10 +469,10 @@ namespace ImageEditor.ViewModel
             }
 
             for (int i = -offset; i < offset; i++)
-            for (int j = -offset; j < offset; j++)
-            for (int k = 0; k < 3; k++)
-                if((int)p.Y+j<pixels.GetLength(0)&&(int)p.Y+j>0&& (int)p.X + i < pixels.GetLength(1) && (int)p.X + i > 0)
-                pixels[(int)p.Y + j, (int)p.X + i, k] = intensity;
+                for (int j = -offset; j < offset; j++)
+                    for (int k = 0; k < 3; k++)
+                        if ((int)p.Y + j < pixels.GetLength(0) && (int)p.Y + j > 0 && (int)p.X + i < pixels.GetLength(1) && (int)p.X + i > 0)
+                            pixels[(int)p.Y + j, (int)p.X + i, k] = intensity;
         }
 
         private void PixelCopy(Point p1, Point p2)
@@ -400,7 +502,7 @@ namespace ImageEditor.ViewModel
                 {
                     for (int i = (SelectedThickness - 1) / -2; i <= (SelectedThickness - 1) / 2; i++)
                     {
-                        DrawPoint(new Point(x, y+i), 0);
+                        DrawPoint(new Point(x, y + i), 0);
                     }
 
                     y += m;
@@ -426,7 +528,7 @@ namespace ImageEditor.ViewModel
                 {
                     for (int i = (SelectedThickness - 1) / -2; i <= (SelectedThickness - 1) / 2; i++)
                     {
-                        DrawPoint(new Point(x+i, y), 0);
+                        DrawPoint(new Point(x + i, y), 0);
                     }
 
                     x += 1 / m;
@@ -499,7 +601,7 @@ namespace ImageEditor.ViewModel
             int d = 1 - radius;
             int x = 0;
             int y = radius;
-            var dict=new Dictionary<int,int>(){{1,0},{3,1},{5,2},{7,3}};
+            var dict = new Dictionary<int, int>() { { 1, 0 }, { 3, 1 }, { 5, 2 }, { 7, 3 } };
             if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY + y), dict[SelectedMidpointCircleThickness]);
             if (centerX + x >= 0 && centerX + x <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x, centerY - y), dict[SelectedMidpointCircleThickness]);
             if (centerX - x >= 0 && centerX - x <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x, centerY + y), dict[SelectedMidpointCircleThickness]);
@@ -537,7 +639,7 @@ namespace ImageEditor.ViewModel
         }
 
         private void WuLine(Point p1, Point p2)
-        {          
+        {
             byte L = 0;
             byte B = CanvasColor; /*Background Color*/
             double dx = p2.X - p1.X;
@@ -594,6 +696,60 @@ namespace ImageEditor.ViewModel
             }
         }
 
+        private void ResetWuLine(Point p1, Point p2)
+        {
+            byte L = 0;
+            byte B = CanvasColor; /*Background Color*/
+            double dx = p2.X - p1.X;
+            double dy = p2.Y - p1.Y;
+            double m = dy / dx;
+            if (Math.Abs(m) < 1)
+            {
+                double y = (int)p1.X < (int)p2.X ? p1.Y : p2.Y;
+                int beginX;
+                int endX;
+                if ((int)p1.X < (int)p2.X)
+                {
+                    beginX = (int)p1.X;
+                    endX = (int)p2.X;
+                }
+                else
+                {
+                    beginX = (int)p2.X;
+                    endX = (int)p1.X;
+                }
+                for (var x = beginX; x <= endX; ++x)
+                {
+                    DrawPoint(new Point(x, Math.Floor(y)), 0, CanvasColor);
+                    DrawPoint(new Point(x, Math.Floor(y) + 1), 0, CanvasColor);
+                    y += m;
+                }
+            }
+            else
+            {
+                double x = (int)p1.Y < (int)p2.Y ? p1.X : p2.X;
+                int beginY;
+                int endY;
+                if ((int)p1.Y < (int)p2.Y)
+                {
+                    beginY = (int)p1.Y;
+                    endY = (int)p2.Y;
+                }
+                else
+                {
+                    beginY = (int)p2.Y;
+                    endY = (int)p1.Y;
+                }
+
+                for (var y = beginY; y <= endY; ++y)
+                {                   
+                    DrawPoint(new Point(Math.Floor(x), y), 0, CanvasColor);
+                    DrawPoint(new Point(Math.Floor(x) + 1, y), 0, CanvasColor);
+                    x += 1 / m;
+                }
+            }
+        }
+
         private void WuCircle(Point p1, Point p2)
         {
             var radius = (int)Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2));
@@ -629,14 +785,14 @@ namespace ImageEditor.ViewModel
                 if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x >= 0 && centerY + x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x), 0, c2);
                 if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x >= 0 && centerY - x <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x), 0, c2);
 
-                if (centerX + x-1 >= 0 && centerX + x-1 <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x-1, centerY + y), 0, c1);
-                if (centerX + x-1 >= 0 && centerX + x-1 <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x-1, centerY - y), 0, c1);
-                if (centerX - x-1 >= 0 && centerX - x-1 <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x-1, centerY + y), 0, c1);
-                if (centerX - x-1 >= 0 && centerX - x-1 <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x-1, centerY - y), 0, c1);
-                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY + x-1 >= 0 && centerY + x-1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY + x-1), 0, c1);
-                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY - x-1 >= 0 && centerY - x-1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY - x-1), 0, c1);
-                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x-1 >= 0 && centerY + x-1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x-1), 0, c1);
-                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x-1 >= 0 && centerY - x-1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x-1), 0, c1);
+                if (centerX + x - 1 >= 0 && centerX + x - 1 <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x - 1, centerY + y), 0, c1);
+                if (centerX + x - 1 >= 0 && centerX + x - 1 <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX + x - 1, centerY - y), 0, c1);
+                if (centerX - x - 1 >= 0 && centerX - x - 1 <= _bitmap.Width - 1 && centerY + y >= 0 && centerY + y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x - 1, centerY + y), 0, c1);
+                if (centerX - x - 1 >= 0 && centerX - x - 1 <= _bitmap.Width - 1 && centerY - y >= 0 && centerY - y <= _bitmap.Height - 1) DrawPoint(new Point(centerX - x - 1, centerY - y), 0, c1);
+                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY + x - 1 >= 0 && centerY + x - 1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY + x - 1), 0, c1);
+                if (centerX + y >= 0 && centerX + y <= _bitmap.Width - 1 && centerY - x - 1 >= 0 && centerY - x - 1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX + y, centerY - x - 1), 0, c1);
+                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY + x - 1 >= 0 && centerY + x - 1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY + x - 1), 0, c1);
+                if (centerX - y >= 0 && centerX - y <= _bitmap.Width - 1 && centerY - x - 1 >= 0 && centerY - x - 1 <= _bitmap.Height - 1) DrawPoint(new Point(centerX - y, centerY - x - 1), 0, c1);
             }
 
 
@@ -655,7 +811,8 @@ namespace ImageEditor.ViewModel
                 for (int j = -offset; j < offset; j++)
                     for (int k = 0; k < 3; k++)
                         _pixels[(int)Math.Round(p.Y) + j, (int)Math.Round(p.X) + i, k] = intensity;
-        }
+        } 
+        #endregion
 
         #region bitmap initalization & clear
         private void ResetBitmap()
