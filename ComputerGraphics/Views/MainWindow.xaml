@@ -94,9 +94,11 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="50"/>
                 </Grid.RowDefinitions>
-                <views:CanvasView  HorizontalAlignment="Left" VerticalAlignment="Top"
-                                   Visibility="{Binding IsChecked,ElementName=RbDisplaySwitch,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter='Inverse'}"/>
-                <Grid Grid.Row="0" Visibility="{Binding IsChecked,ElementName=RbDisplaySwitch,Converter={StaticResource BoolToVisibilityConverter}}">
+                <views:CanvasView HorizontalAlignment="Left" VerticalAlignment="Top"
+                                    Visibility="{Binding IsChecked,ElementName=RbCanvas,Converter={StaticResource BoolToVisibilityConverter}}"/>
+                <views:ClippingView HorizontalAlignment="Left" VerticalAlignment="Top"
+                                   Visibility="{Binding IsChecked,ElementName=RbClipping,Converter={StaticResource BoolToVisibilityConverter}}"/>
+                <Grid Grid.Row="0" Visibility="{Binding IsChecked,ElementName=RbImage,Converter={StaticResource BoolToVisibilityConverter}}">
                     <Grid Background="{DynamicResource MaterialDesignPaper}" AllowDrop="True" x:Name="Grid">
                         <Image Stretch="None"  
                        Tag="Image" x:Name="Image" 
@@ -132,11 +134,10 @@
                 </Grid>
                 <Border BorderThickness="0,1,0,0" Grid.Row="1" BorderBrush="LightGray">
                     <Grid  HorizontalAlignment="Stretch"  Background="White">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Label FontSize="16" Foreground="Black" Content="Canvas " VerticalAlignment="Center"/>
-                            <ToggleButton Style="{StaticResource MaterialDesignSwitchLightToggleButton}" 
-                                  x:Name="RbDisplaySwitch"/>
-                            <Label FontSize="16" Foreground="Black" Content="Image " VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <RadioButton FontSize="16" Style="{StaticResource MaterialDesignRadioButton}" GroupName="ViewOption"  IsChecked="True" Content="Drawing lines and circles" x:Name="RbClipping" Margin="0,0,10,0"/>
+                            <RadioButton FontSize="16" Style="{StaticResource MaterialDesignRadioButton}" GroupName="ViewOption" Content="Clipping and filling"  x:Name="RbCanvas" Margin="0,0,10,0"/>
+                            <RadioButton FontSize="16" Style="{StaticResource MaterialDesignRadioButton}" GroupName="ViewOption" Content="Image filtering" x:Name="RbImage"  Margin="0,0,10,0"/>
                         </StackPanel>
                     </Grid>
                 </Border>

@@ -8,8 +8,6 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using MoreLinq;
-using OxyPlot.Wpf;
 
 namespace ImageEditor.ViewModel
 {
@@ -20,7 +18,6 @@ namespace ImageEditor.ViewModel
         private WriteableBitmap _bitmap;
         private const int BitmapWidth = 1000;
         private const int BitmapHeight = 1000;
-        readonly List<(List<Point> points, bool isClosed)> polygons = new List<(List<Point>, bool)>();
         private readonly byte[,,] _pixels = new byte[BitmapHeight, BitmapWidth, 4];
         private int _stride;
         private Point? _lastPoint;
@@ -72,115 +69,17 @@ namespace ImageEditor.ViewModel
         {
             var e = obj as MouseButtonEventArgs;
             var p = e.GetPosition(((IInputElement)e.Source));
-            DrawPolygon(p);
-            //DrawPoint(p, 3);
-            //if (_lastPoint == null)
-            //    _lastPoint = p;
-            //else
-            //{
-            //    DrawShape(p);
-
-            //    _lastPoint = null;
-            //}
-            SetBitmap();
-        }
-      
-        private void DrawPolygon(Point point)
-        {
-            if (polygons.Count == 0 || polygons.All(p=>p.isClosed))
-            {
-                polygons.Add((new List<Point>(),false));
-            }
-
-            var polygon = polygons.First(p => !p.isClosed);
-            var points = polygon.points;
-
-            if (points.Count == 0)
-            {
-                points.Add(point);
-                DrawPoint(point, 3);
-            }
-            else if(points.First().DistanceTo(point)<5)
-            {
-                WuLine(points.First(), points.Last());
-                points.ForEach(p=>DrawPoint(p,3,127));
-                polygon.isClosed = true;
-                polygons.RemoveAt(polygons.Count-1);
-                
-                var isConvex = IsPolygonConvex(points);              
-                if (!isConvex)
-                {
-                    MessageBox.Show("Polygon is not convex, draw again");
-                    
-                    foreach (var p in points)
-                    {
-                        DrawPoint(p,3,255);
-                    }
-
-                    for (int i = 0; i < points.Count-1; i++)
-                    {
-                        ResetWuLine(points[i], points[i+1]);
-                    }                
-                    ResetWuLine(points.First(), points.Last());
-                }
-                else
-                {
-                    polygons.Add(polygon);
-                }
-            }
+            DrawPoint(p, 3);
+            if (_lastPoint == null)
+                _lastPoint = p;
             else
             {
-                DrawPoint(point, 3);
-                WuLine(points.Last(),point);
-                points.Add(point);               
-            }               
-        }
+                DrawShape(p);
 
-        public bool IsPolygonConvex(List<Point> points)
-        {
-            // For each set of three adjacent points A, B, C,
-            // find the cross product AB · BC. If the sign of
-            // all the cross products is the same, the angles
-            // are all positive or negative (depending on the
-            // order in which we visit them) so the polygon
-            // is convex.
-            bool got_negative = false;
-            bool got_positive = false;
-            int num_points = points.Count;
-            int B, C;
-            for (int A = 0; A < num_points; A++)
-            {
-                B = (A + 1) % num_points;
-                C = (B + 1) % num_points;
-
-                double cross_product =
-                    CrossProductLength(points[A],points[B],points[C]);
-                if (cross_product < 0)
-                {
-                    got_negative = true;
-                }
-                else if (cross_product > 0)
-                {
-                    got_positive = true;
-                }
-                if (got_negative && got_positive) return false;
+                _lastPoint = null;
             }
-
-            // If we got this far, the polygon is convex.
-            return true;
-        }
-
-        public double CrossProductLength(Point A,Point B, Point C)
-        {
-            // Get the vectors' coordinates.
-            double BAx = A.X - B.X;
-            double BAy = A.Y - B.Y;
-            double BCx = C.X - B.X;
-            double BCy = C.Y - B.Y;
-
-            // Calculate the Z coordinate of the cross product.
-            return (BAx * BCy - BAy * BCx);
-        }
+            SetBitmap();
+        }          
 
         #region drawing lines & circles
         private void DrawShape(Point point)

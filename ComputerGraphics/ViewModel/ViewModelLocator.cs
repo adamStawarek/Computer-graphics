@@ -13,6 +13,7 @@ namespace ImageEditor.ViewModel
             SimpleIoc.Default.Register<MainViewModel>();
             SimpleIoc.Default.Register<FilterDesignerViewModel>();
             SimpleIoc.Default.Register<CanvasViewModel>();
+            SimpleIoc.Default.Register<ClippingViewModel>();
         }
 
         public MainViewModel Main
@@ -39,7 +40,15 @@ namespace ImageEditor.ViewModel
                 return ServiceLocator.Current.GetInstance<CanvasViewModel>();
             }
         }
-     
+
+        public ClippingViewModel Clipping   
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<ClippingViewModel>();
+            }
+        }
+
         public static void Cleanup()
         {
             // TODO Clear the ViewModels

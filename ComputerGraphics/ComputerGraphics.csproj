@@ -113,11 +113,15 @@
     <Compile Include="Helpers\FunctionHelper.cs" />
     <Compile Include="Helpers\PrimaryColor.cs" />
     <Compile Include="ViewModel\CanvasViewModel.cs" />
+    <Compile Include="ViewModel\ClippingViewModel.cs" />
     <Compile Include="ViewModel\FilterDesignerViewModel.cs" />
     <Compile Include="Filters\Interfaces\IParamized.cs" />
     <Compile Include="ViewModel\Helpers\RasterGraphicViewModel.cs" />
     <Compile Include="Views\CanvasView.xaml.cs">
       <DependentUpon>CanvasView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ClippingView.xaml.cs">
+      <DependentUpon>ClippingView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Converters\BitmapToImageSource.cs" />
     <Compile Include="Views\Converters\BoolToVisibilityConverter.cs" />
@@ -141,6 +145,10 @@
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Page Include="Views\CanvasView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ClippingView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
