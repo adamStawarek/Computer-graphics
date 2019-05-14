@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Color=System.Drawing.Color;
 
 namespace ImageEditor.ViewModel
 {
@@ -19,6 +20,7 @@ namespace ImageEditor.ViewModel
         private const int BitmapWidth = 1000;
         private const int BitmapHeight = 1000;
         static readonly List<(List<Point> points, bool isClosed)> Polygons = new List<(List<Point>, bool)>();
+        static readonly List<(Point a,Point b)> Edges=new List<(Point a, Point b)>();
         private static readonly byte[,,] Pixels = new byte[BitmapHeight, BitmapWidth, 4];
         private int _stride;
         private static Point? _lastPoint;
@@ -27,9 +29,15 @@ namespace ImageEditor.ViewModel
         #region commands
         public RelayCommand<object> ClickCommand { get; }
         public RelayCommand ClearCanvasCommand { get; set; }
+        public RelayCommand ApplyFillingCommand { get; set; }
         #endregion
 
         #region properties
+        public Color SelectedColor { get; set; } = Color.Red;
+        public List<Color> Colors => new List<Color>
+        {
+            Color.Red, Color.Blue, Color.Yellow
+        };
         public WriteableBitmap Bitmap
         {
             get => _bitmap;
@@ -50,9 +58,10 @@ namespace ImageEditor.ViewModel
         {
             ClickCommand = new RelayCommand<object>(Click);
             ClearCanvasCommand = new RelayCommand(ResetBitmap);
+            ApplyFillingCommand=new RelayCommand(ApplyFilling);
             ResetBitmap();
         }
-
+     
         private void Click(object obj)
         {
             var e = obj as MouseButtonEventArgs;
@@ -112,6 +121,11 @@ namespace ImageEditor.ViewModel
                 WuLine(points.Last(), point);
                 points.Add(point);
             }
+        }
+
+        private void ApplyFilling()
+        {
+            throw new NotImplementedException();
         }
 
         #region helpers
@@ -186,6 +200,7 @@ namespace ImageEditor.ViewModel
             else
             {
                 WuLine(point,(Point)_lastPoint);
+                Edges.Add((point,(Point)_lastPoint));
                 _lastPoint = null;
             }
         }
