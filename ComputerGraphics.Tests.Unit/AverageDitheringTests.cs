@@ -1,6 +1,5 @@
 using System;
 using System.Drawing;
-using ImageEditor.Filters;
 using ImageEditor.Filters.Functional;
 using NUnit.Framework;
 

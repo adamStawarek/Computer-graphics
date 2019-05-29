@@ -8,22 +8,25 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Color=System.Drawing.Color;
+using ImageEditor.ViewModel.Helpers;
+using Color = System.Drawing.Color;
 
 namespace ImageEditor.ViewModel
 {
     public class ClippingViewModel : ViewModelBase
-    {      
+    {
         #region private fields
         private const int CanvasColor = byte.MaxValue;
         private WriteableBitmap _bitmap;
         private const int BitmapWidth = 1000;
         private const int BitmapHeight = 1000;
-        static readonly List<(List<Point> points, bool isClosed)> Polygons = new List<(List<Point>, bool)>();
-        static readonly List<(Point a,Point b)> Edges=new List<(Point a, Point b)>();
-        private static readonly byte[,,] Pixels = new byte[BitmapHeight, BitmapWidth, 4];
+        private readonly List<(List<Point> points, bool isClosed)> _polygons;
+        private readonly List<(Point a, Point b)> _edges;
+        private readonly byte[,,] _pixels;
         private int _stride;
-        private static Point? _lastPoint;
+        private Point? _lastPoint;
+        private Dictionary<int, List<ScanLine>> _aet;
+        private Dictionary<int, List<ScanLine>> _et;
         #endregion
 
         #region commands
@@ -47,38 +50,44 @@ namespace ImageEditor.ViewModel
                 RaisePropertyChanged("Bitmap");
             }
         }
-        public List<ChoiceViewModel> Choices { get; set; } = new List<ChoiceViewModel>
-        {
-           new ChoiceViewModel("Draw convex polygon",true,DrawPolygon),
-           new ChoiceViewModel("Draw clipping line",false,DrawLine)
-        };
+        public List<ChoiceViewModel> Choices { get; set; }
         #endregion
 
         public ClippingViewModel()
         {
             ClickCommand = new RelayCommand<object>(Click);
             ClearCanvasCommand = new RelayCommand(ResetBitmap);
-            ApplyFillingCommand=new RelayCommand(ApplyFilling);
+            ApplyFillingCommand = new RelayCommand(ApplyFilling);
+
+            _polygons = new List<(List<Point>, bool)>();
+            _edges = new List<(Point a, Point b)>();
+            _pixels = new byte[BitmapHeight, BitmapWidth, 4];
+            Choices = new List<ChoiceViewModel>
+            {
+                new ChoiceViewModel("Draw convex polygon", true, DrawPolygon),
+                new ChoiceViewModel("Draw clipping line", false, DrawLine)
+            };
+
             ResetBitmap();
         }
-     
+
         private void Click(object obj)
         {
             var e = obj as MouseButtonEventArgs;
             var p = e.GetPosition(((IInputElement)e.Source));
-            var option=Choices.FirstOrDefault(r => r.IsEnabled);
+            var option = Choices.FirstOrDefault(r => r.IsEnabled);
             option?.Action(p);
             SetBitmap();
         }
 
-        private static void DrawPolygon(Point point)
+        private void DrawPolygon(Point point)
         {
-            if (Polygons.Count == 0 || Polygons.All(p => p.isClosed))
+            if (_polygons.Count == 0 || _polygons.All(p => p.isClosed))
             {
-                Polygons.Add((new List<Point>(), false));
+                _polygons.Add((new List<Point>(), false));
             }
 
-            var polygon = Polygons.First(p => !p.isClosed);
+            var polygon = _polygons.First(p => !p.isClosed);
             var points = polygon.points;
 
             if (points.Count == 0)
@@ -88,10 +97,10 @@ namespace ImageEditor.ViewModel
             }
             else if (points.First().DistanceTo(point) < 5)
             {
-                WuLine(points.First(), points.Last());
+                DrawWuLine(points.First(), points.Last());
                 points.ForEach(p => DrawPoint(p, 3, 127));
                 polygon.isClosed = true;
-                Polygons.RemoveAt(Polygons.Count - 1);
+                _polygons.RemoveAt(_polygons.Count - 1);
 
                 var isConvex = IsPolygonConvex(points);
                 if (!isConvex)
@@ -112,23 +121,156 @@ namespace ImageEditor.ViewModel
                 }
                 else
                 {
-                    Polygons.Add(polygon);
+                    _polygons.Add(polygon);
                 }
             }
             else
             {
                 DrawPoint(point, 3);
-                WuLine(points.Last(), point);
+                DrawWuLine(points.Last(), point);
                 points.Add(point);
             }
         }
 
         private void ApplyFilling()
         {
-            throw new NotImplementedException();
+            FillPolygon();
+            SetBitmap();
+        }
+
+        private void FillPolygon()
+        {
+            var polygonPoints = _polygons[0].points;
+            InitializeEdgeTable(polygonPoints);
+
+            var y = _et.Keys.Min();
+            _aet = new Dictionary<int, List<ScanLine>>();
+            foreach (var key in _et.Keys)
+            {
+               _aet.Add(key,new List<ScanLine>());
+            }
+
+            while (_aet.Any() || _et.Any())
+            {
+                if (!_et.ContainsKey(y)) break;
+                
+                    _aet[y]=_et[y];
+                    _et.Remove(y);
+                
+
+                foreach (var row in _aet)
+                {
+                    row.Value.Sort((a, b) => a.XMin.CompareTo(b.XMin));
+                }
+                //  fill pixels between pairs of intersections
+                foreach (var row in _aet)
+                {
+                    for (int i = 0; i < row.Value.Count - 1; i++)
+                    {
+                        var x1 = row.Value[i].XMin;
+                        var x2 = row.Value[i + 1].XMin;
+                        for (int j = x1; j <= x2; j++)
+                        {
+                            DrawPoint(new Point(j, row.Key));
+                        }
+                    }
+                }
+                _aet.Remove(y);
+                ++y;
+               
+                foreach (var row in _aet)
+                {
+                    foreach (var t in row.Value)
+                    {
+                        t.XMin += (int)t.Slope;
+                    }
+                }
+            }
+        }
+
+        private void InitializeEdgeTable(List<Point> points)
+        {
+            _et = new Dictionary<int, List<ScanLine>>();
+            Point p1, p2;
+            int yMax, xVal;
+            double slope;
+
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                p1 = points[i];
+                p2 = points[i + 1];
+
+                yMax = (int)(p1.Y < p2.Y ? p2.Y : p1.Y);
+                xVal = (int)(p1.Y < p2.Y ? p1.X : p2.X);
+                slope = (p2.X - p1.X) / (double)(p2.Y - p1.Y);
+                if (_et.ContainsKey(yMax))
+                {
+                    _et[yMax].Add(new ScanLine(yMax, xVal, slope));
+                }
+                else
+                {
+                    _et.Add(yMax, new List<ScanLine> { new ScanLine(yMax, xVal, slope) });
+                }
+            }
+
+            p1 = points.Last();
+            p2 = points.First();
+
+            yMax = (int)(p1.Y < p2.Y ? p2.Y : p1.Y);
+            xVal = (int)(p1.Y < p2.Y ? p1.X : p2.X);
+            slope = (p2.X - p1.X) / (double)(p2.Y - p1.Y);
+
+            if (_et.ContainsKey(yMax))
+            {
+                _et[yMax].Add(new ScanLine(yMax, xVal, slope));
+            }
+            else
+            {
+                _et.Add(yMax, new List<ScanLine> { new ScanLine(yMax, xVal, slope) });
+            }
+
+            for (int i = (int)points.Min(p => p.Y); i < (int)points.Max(p => p.Y); i++)
+            {
+                if (!_et.ContainsKey(i)) _et.Add(i, new List<ScanLine>());
+            }
+            _et = _et.OrderBy(e => e.Key).ToDictionary(e => e.Key, e => e.Value);
+        }
+
+        private void Clip(Point rp,Point q)
+        {
+            var points = _polygons[0].points.Select(p=>new System.Drawing.Point((int)p.X,(int)p.Y)).ToList();            
+            var polygon = new CyrusBeck.Polygon()
+            {
+                nPoints = points.Count(),
+                v = points
+            };
+            var n = CyrusBeck.CalcNormals(points);
+            var p1 = points[0];
+            var p2 = points[1];
+            var visible = CyrusBeck.CBClip(p1,p2, n, polygon, false, new System.Drawing.Point((int)rp.X, (int)rp.Y), new System.Drawing.Point((int)q.X, (int)q.Y));
+
+            if (p1.X != rp.X || p2.X != q.X) {
+                DrawWuLine(new Point(p1.X,p1.Y), new Point(rp.X, rp.Y));              
+                DrawWuLine(new Point(q.X, q.Y), new Point(p2.X, p2.Y));             
+            } else {
+                DrawWuLine(new Point(p1.X, p1.Y), new Point(p2.X, p2.Y));
+            }
         }
 
         #region helpers
+        public class ScanLine
+        {
+            public ScanLine(int yMax, int xMin, double slope)
+            {
+                YMax = yMax;
+                XMin = xMin;
+                Slope = slope;
+            }
+
+            public int YMax { get; set; }
+            public int XMin { get; set; }
+            public double Slope { get; set; }
+        }
         public class ChoiceViewModel
         {
             public ChoiceViewModel(string description, bool isEnabled, Action<Point> action)
@@ -142,7 +284,7 @@ namespace ImageEditor.ViewModel
             public Action<Point> Action { get; set; }
             public bool IsEnabled { get; set; }
         }
-        public static bool IsPolygonConvex(List<Point> points)
+        public bool IsPolygonConvex(List<Point> points)
         {
             // For each set of three adjacent points A, B, C,
             // find the cross product AB · BC. If the sign of
@@ -150,47 +292,46 @@ namespace ImageEditor.ViewModel
             // are all positive or negative (depending on the
             // order in which we visit them) so the polygon
             // is convex.
-            bool got_negative = false;
-            bool got_positive = false;
-            int num_points = points.Count;
-            int B, C;
-            for (int A = 0; A < num_points; A++)
+            var gotNegative = false;
+            var gotPositive = false;
+            var numPoints = points.Count;
+            for (var a = 0; a < numPoints; a++)
             {
-                B = (A + 1) % num_points;
-                C = (B + 1) % num_points;
+                var b = (a + 1) % numPoints;
+                var c = (b + 1) % numPoints;
 
-                double cross_product =
-                    CrossProductLength(points[A], points[B], points[C]);
-                if (cross_product < 0)
+                var crossProduct =
+                    CrossProductLength(points[a], points[b], points[c]);
+                if (crossProduct < 0)
                 {
-                    got_negative = true;
+                    gotNegative = true;
                 }
-                else if (cross_product > 0)
+                else if (crossProduct > 0)
                 {
-                    got_positive = true;
+                    gotPositive = true;
                 }
 
-                if (got_negative && got_positive) return false;
+                if (gotNegative && gotPositive) return false;
             }
 
             // If we got this far, the polygon is convex.
             return true;
         }
-        public static double CrossProductLength(Point A, Point B, Point C)
+        public double CrossProductLength(Point a, Point b, Point c)
         {
             // Get the vectors' coordinates.
-            double BAx = A.X - B.X;
-            double BAy = A.Y - B.Y;
-            double BCx = C.X - B.X;
-            double BCy = C.Y - B.Y;
+            var bAx = a.X - b.X;
+            var bAy = a.Y - b.Y;
+            var bCx = c.X - b.X;
+            var bCy = c.Y - b.Y;
 
             // Calculate the Z coordinate of the cross product.
-            return (BAx * BCy - BAy * BCx);
+            return (bAx * bCy - bAy * bCx);
         }
         #endregion
 
         #region drawing lines & circles   
-        private static void DrawLine(Point point)
+        private void DrawLine(Point point)
         {
             DrawPoint(point, 3);
             if (_lastPoint == null)
@@ -199,13 +340,15 @@ namespace ImageEditor.ViewModel
             }
             else
             {
-                WuLine(point,(Point)_lastPoint);
-                Edges.Add((point,(Point)_lastPoint));
+                DrawWuLine(point, (Point)_lastPoint);
+                _edges.Add((point, (Point)_lastPoint));
+                Clip(point, (Point)_lastPoint);
                 _lastPoint = null;
+                
             }
         }
-        private static void WuLine(Point p1,Point p2)
-        {          
+        private void DrawWuLine(Point p1, Point p2)
+        {
             byte L = 0;
             byte B = CanvasColor;
             double dx = p2.X - p1.X;
@@ -260,9 +403,9 @@ namespace ImageEditor.ViewModel
                     DrawPoint(new Point(Math.Floor(x) + 1, y), 0, (byte)c2);
                     x += 1 / m;
                 }
-            }         
+            }
         }
-        private static void ResetWuLine(Point p1, Point p2)
+        private void ResetWuLine(Point p1, Point p2)
         {
             byte L = 0;
             byte B = CanvasColor; /*Background Color*/
@@ -316,19 +459,19 @@ namespace ImageEditor.ViewModel
                 }
             }
         }
-        private static void DrawPoint(Point p, int offset = 1, byte intensity = 0)
+        private void DrawPoint(Point p, int offset = 1, byte intensity = 0)
         {
             if (offset == 0)
             {
                 for (int k = 0; k < 3; k++)
-                    Pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), k] = intensity;
+                    _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), k] = intensity;
                 return;
             }
 
             for (int i = -offset; i < offset; i++)
                 for (int j = -offset; j < offset; j++)
                     for (int k = 0; k < 3; k++)
-                        Pixels[(int)Math.Round(p.Y) + j, (int)Math.Round(p.X) + i, k] = intensity;
+                        _pixels[(int)Math.Round(p.Y) + j, (int)Math.Round(p.X) + i, k] = intensity;
         }
         #endregion
 
@@ -348,10 +491,10 @@ namespace ImageEditor.ViewModel
                     for (int i = 0; i < 3; i++)
                     {
 
-                        Pixels[row, col, i] = CanvasColor;
+                        _pixels[row, col, i] = CanvasColor;
                     }
 
-                    Pixels[row, col, 3] = byte.MaxValue;
+                    _pixels[row, col, 3] = byte.MaxValue;
                 }
             }
         }
@@ -367,7 +510,7 @@ namespace ImageEditor.ViewModel
                 for (int col = 0; col < BitmapWidth; col++)
                 {
                     for (int i = 0; i < 4; i++)
-                        pixels1d[index++] = Pixels[row, col, i];
+                        pixels1d[index++] = _pixels[row, col, i];
                 }
             }
 
