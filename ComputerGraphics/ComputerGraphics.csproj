@@ -117,6 +117,7 @@
     <Compile Include="ViewModel\FilterDesignerViewModel.cs" />
     <Compile Include="Filters\Interfaces\IParamized.cs" />
     <Compile Include="ViewModel\Helpers\CyrusBeck.cs" />
+    <Compile Include="ViewModel\Helpers\EdgeData.cs" />
     <Compile Include="ViewModel\Helpers\RasterGraphicViewModel.cs" />
     <Compile Include="Views\CanvasView.xaml.cs">
       <DependentUpon>CanvasView.xaml</DependentUpon>

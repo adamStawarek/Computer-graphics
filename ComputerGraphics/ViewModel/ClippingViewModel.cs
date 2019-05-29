@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
+using ImageEditor.ViewModel.Helpers;
 using OxyPlot.Wpf;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,6 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using ImageEditor.ViewModel.Helpers;
 using Color = System.Drawing.Color;
 
 namespace ImageEditor.ViewModel
@@ -64,7 +64,8 @@ namespace ImageEditor.ViewModel
             _pixels = new byte[BitmapHeight, BitmapWidth, 4];
             Choices = new List<ChoiceViewModel>
             {
-                new ChoiceViewModel("Draw convex polygon", true, DrawPolygon),
+                new ChoiceViewModel("Draw convex polygon", true, DrawConvexPolygon),
+                new ChoiceViewModel("Draw polygon", false, DrawPolygon),
                 new ChoiceViewModel("Draw clipping line", false, DrawLine)
             };
 
@@ -80,7 +81,7 @@ namespace ImageEditor.ViewModel
             SetBitmap();
         }
 
-        private void DrawPolygon(Point point)
+        private void DrawConvexPolygon(Point point)
         {
             if (_polygons.Count == 0 || _polygons.All(p => p.isClosed))
             {
@@ -132,113 +133,128 @@ namespace ImageEditor.ViewModel
             }
         }
 
-        private void ApplyFilling()
+        private void DrawPolygon(Point point)
         {
-            FillPolygon();
-            SetBitmap();
-        }
-
-        private void FillPolygon()
-        {
-            var polygonPoints = _polygons[0].points;
-            InitializeEdgeTable(polygonPoints);
-
-            var y = _et.Keys.Min();
-            _aet = new Dictionary<int, List<ScanLine>>();
-            foreach (var key in _et.Keys)
+            if (_polygons.Count == 0 || _polygons.All(p => p.isClosed))
             {
-               _aet.Add(key,new List<ScanLine>());
+                _polygons.Add((new List<Point>(), false));
             }
 
-            while (_aet.Any() || _et.Any())
-            {
-                if (!_et.ContainsKey(y)) break;
-                
-                    _aet[y]=_et[y];
-                    _et.Remove(y);
-                
+            var polygon = _polygons.First(p => !p.isClosed);
+            var points = polygon.points;
 
-                foreach (var row in _aet)
-                {
-                    row.Value.Sort((a, b) => a.XMin.CompareTo(b.XMin));
-                }
-                //  fill pixels between pairs of intersections
-                foreach (var row in _aet)
-                {
-                    for (int i = 0; i < row.Value.Count - 1; i++)
-                    {
-                        var x1 = row.Value[i].XMin;
-                        var x2 = row.Value[i + 1].XMin;
-                        for (int j = x1; j <= x2; j++)
-                        {
-                            DrawPoint(new Point(j, row.Key));
-                        }
-                    }
-                }
-                _aet.Remove(y);
-                ++y;
-               
-                foreach (var row in _aet)
-                {
-                    foreach (var t in row.Value)
-                    {
-                        t.XMin += (int)t.Slope;
-                    }
-                }
+            if (points.Count == 0)
+            {
+                points.Add(point);
+                DrawPoint(point, 3);
             }
-        }
-
-        private void InitializeEdgeTable(List<Point> points)
-        {
-            _et = new Dictionary<int, List<ScanLine>>();
-            Point p1, p2;
-            int yMax, xVal;
-            double slope;
-
-            for (int i = 0; i < points.Count - 1; i++)
+            else if (points.First().DistanceTo(point) < 5)
             {
-                p1 = points[i];
-                p2 = points[i + 1];
+                DrawWuLine(points.First(), points.Last());
+                points.ForEach(p => DrawPoint(p, 3, 127));
+                polygon.isClosed = true;
+                _polygons.RemoveAt(_polygons.Count - 1);
+                _polygons.Add(polygon);
 
-                yMax = (int)(p1.Y < p2.Y ? p2.Y : p1.Y);
-                xVal = (int)(p1.Y < p2.Y ? p1.X : p2.X);
-                slope = (p2.X - p1.X) / (double)(p2.Y - p1.Y);
-                if (_et.ContainsKey(yMax))
-                {
-                    _et[yMax].Add(new ScanLine(yMax, xVal, slope));
-                }
-                else
-                {
-                    _et.Add(yMax, new List<ScanLine> { new ScanLine(yMax, xVal, slope) });
-                }
-            }
-
-            p1 = points.Last();
-            p2 = points.First();
-
-            yMax = (int)(p1.Y < p2.Y ? p2.Y : p1.Y);
-            xVal = (int)(p1.Y < p2.Y ? p1.X : p2.X);
-            slope = (p2.X - p1.X) / (double)(p2.Y - p1.Y);
-
-            if (_et.ContainsKey(yMax))
-            {
-                _et[yMax].Add(new ScanLine(yMax, xVal, slope));
             }
             else
             {
-                _et.Add(yMax, new List<ScanLine> { new ScanLine(yMax, xVal, slope) });
+                DrawPoint(point, 3);
+                DrawWuLine(points.Last(), point);
+                points.Add(point);
             }
-
-            for (int i = (int)points.Min(p => p.Y); i < (int)points.Max(p => p.Y); i++)
-            {
-                if (!_et.ContainsKey(i)) _et.Add(i, new List<ScanLine>());
-            }
-            _et = _et.OrderBy(e => e.Key).ToDictionary(e => e.Key, e => e.Value);
         }
 
-        private void Clip(Point rp,Point q)
+        private void ApplyFilling()
         {
-            var points = _polygons[0].points.Select(p=>new System.Drawing.Point((int)p.X,(int)p.Y)).ToList();            
+            FillPolygons();
+            SetBitmap();
+        }
+
+        private void FillPolygons()
+        {
+            foreach (var polygon in _polygons.Where(p => p.isClosed))
+            {
+                FillPolygon(polygon.points);
+            }
+
+        }
+
+        private void FillPolygon(List<Point> points)
+        {
+            var edgeTable = InitializeEdgeTable(
+                points.Select(p => new System.Drawing.Point((int)p.X, (int)p.Y)).ToList());
+
+            var activeEdgeTable = new List<EdgeData>();
+
+            for (var i = 0; i < BitmapHeight; i++)
+            {
+                UpdateActiveEdgeTable(edgeTable, activeEdgeTable, i);
+
+                activeEdgeTable.Sort();
+
+                FillBetweenIntersections(activeEdgeTable, i);
+            }
+        }
+
+        private static List<EdgeData> InitializeEdgeTable(List<System.Drawing.Point> pointList)
+        {
+            var list = new List<EdgeData>();
+            for (int i = 0; i < pointList.Count; i++)
+            {
+                var ed = new EdgeData();
+                var point1 = pointList[i];
+                var point2 = i != pointList.Count - 1 ? pointList[i + 1] : pointList[0];
+                if (point1.Y <= point2.Y)
+                {
+                    ed.SetStartPoint(point1);
+                    ed.SetEndPoint(point2);
+                }
+                else
+                {
+                    ed.SetStartPoint(point2);
+                    ed.SetEndPoint(point1);
+                }
+                ed.CalculateRatio();
+                list.Add(ed);
+            }
+            return list;
+        }
+
+        private static void UpdateActiveEdgeTable(List<EdgeData> edgeTable, List<EdgeData> activeEdgeTable, int i)
+        {
+            foreach (var ed in edgeTable)
+            {
+                // Checking if an edge intersects a scanned line
+                if (ed.GetStartPoint().Y <= i && ed.GetEndPoint().Y >= i)
+                {
+                    // If the Active Edge Table does not contain the edge - add
+                    if (!activeEdgeTable.Contains(ed))
+                        activeEdgeTable.Add(ed);
+                }
+                // If the edge does not intersect a scanned line and the Active Edge Table contains it - remove
+                else
+                {
+                    activeEdgeTable.Remove(ed);
+                }
+            }
+        }
+
+        private void FillBetweenIntersections(List<EdgeData> activeEdgeTable, int i)
+        {
+            for (int j = 0; j < activeEdgeTable.Count; j++)
+            {               
+                if (j == activeEdgeTable.Count - 1 || j % 2 != 0) continue;
+                for (int x = activeEdgeTable[j].CalculateX(i); x <= activeEdgeTable[j + 1].CalculateX(i); x++)
+                {
+                    DrawPoint(new Point(x, i), SelectedColor);
+                }
+            }
+        }
+
+        private void Clip(Point rp, Point q)
+        {
+            var points = _polygons[0].points.Select(p => new System.Drawing.Point((int)p.X, (int)p.Y)).ToList();
             var polygon = new CyrusBeck.Polygon()
             {
                 nPoints = points.Count(),
@@ -247,12 +263,15 @@ namespace ImageEditor.ViewModel
             var n = CyrusBeck.CalcNormals(points);
             var p1 = points[0];
             var p2 = points[1];
-            var visible = CyrusBeck.CBClip(p1,p2, n, polygon, false, new System.Drawing.Point((int)rp.X, (int)rp.Y), new System.Drawing.Point((int)q.X, (int)q.Y));
+            var visible = CyrusBeck.CBClip(p1, p2, n, polygon, false, new System.Drawing.Point((int)rp.X, (int)rp.Y), new System.Drawing.Point((int)q.X, (int)q.Y));
 
-            if (p1.X != rp.X || p2.X != q.X) {
-                DrawWuLine(new Point(p1.X,p1.Y), new Point(rp.X, rp.Y));              
-                DrawWuLine(new Point(q.X, q.Y), new Point(p2.X, p2.Y));             
-            } else {
+            if (p1.X != rp.X || p2.X != q.X)
+            {
+                DrawWuLine(new Point(p1.X, p1.Y), new Point(rp.X, rp.Y));
+                DrawWuLine(new Point(q.X, q.Y), new Point(p2.X, p2.Y));
+            }
+            else
+            {
                 DrawWuLine(new Point(p1.X, p1.Y), new Point(p2.X, p2.Y));
             }
         }
@@ -344,7 +363,7 @@ namespace ImageEditor.ViewModel
                 _edges.Add((point, (Point)_lastPoint));
                 Clip(point, (Point)_lastPoint);
                 _lastPoint = null;
-                
+
             }
         }
         private void DrawWuLine(Point p1, Point p2)
@@ -473,11 +492,18 @@ namespace ImageEditor.ViewModel
                     for (int k = 0; k < 3; k++)
                         _pixels[(int)Math.Round(p.Y) + j, (int)Math.Round(p.X) + i, k] = intensity;
         }
+        private void DrawPoint(Point p, Color color)
+        {
+            _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 0] = color.B;
+            _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 1] = color.R;
+            _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 2] = color.G;
+        }
         #endregion
 
         #region bitmap initalization & clear
         private void ResetBitmap()
         {
+            _polygons.Clear();
             _lastPoint = null;
             SetPixelArray();
             SetBitmap();

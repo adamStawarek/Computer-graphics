@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 
 namespace ImageEditor.ViewModel.Helpers
 {
@@ -12,7 +11,7 @@ namespace ImageEditor.ViewModel.Helpers
             public int nPoints;
             public List<Point> v;
         }
-        public static bool CBClip(Point p1, Point p2, Point[] n, Polygon polygon,bool visible, Point rp, Point q)
+        public static bool CBClip(Point p1, Point p2, Point[] n, Polygon polygon, bool visible, Point rp, Point q)
         {
             var dirV = new Point(); // vectors
             var F = new Point();
@@ -30,11 +29,11 @@ namespace ImageEditor.ViewModel.Helpers
             {
                 F.X = p1.X - polygon.v[i].X;
                 F.Y = p1.Y - polygon.v[i].Y;
-                var num = DotProduct(n[i], new Point(F.X,F.Y));
-                var den = DotProduct(n[i], new Point(dirV.X,dirV.Y));
+                var num = DotProduct(n[i], new Point(F.X, F.Y));
+                var den = DotProduct(n[i], new Point(dirV.X, dirV.Y));
 
                 if (Math.Abs(den) < 0.01) // Parallel or Point
-                { 
+                {
                     if (num > 0.0F)
                     {
                         visible = false; //   Parallel and outside or point (p1 == p2) and outside
@@ -65,8 +64,8 @@ namespace ImageEditor.ViewModel.Helpers
             }
             if (t1 <= t2)
             {
-                rp.X =(int) (p1.X + t1 * dirV.X);
-                rp.Y =(int) (p1.Y + t1 * dirV.Y);
+                rp.X = (int)(p1.X + t1 * dirV.X);
+                rp.Y = (int)(p1.Y + t1 * dirV.Y);
                 q.X = (int)(p1.X + t2 * dirV.X);
                 q.Y = (int)(p1.Y + t2 * dirV.Y);
             }
