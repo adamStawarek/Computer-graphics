@@ -13,7 +13,7 @@ namespace ImageEditor.ViewModel.Helpers
         }
         public static bool CBClip(Point p1, Point p2, Point[] n, Polygon polygon, bool visible, Point rp, Point q)
         {
-            var dirV = new Point(); // vectors
+            var vectors = new Point();
             var F = new Point();
 
             // start largest at smallest legal value and smallest 
@@ -21,8 +21,8 @@ namespace ImageEditor.ViewModel.Helpers
             double t1 = 0;
             double t2 = 1;
             // compute the direction vector
-            dirV.X = p2.X - p1.X;
-            dirV.Y = p2.Y - p1.Y;
+            vectors.X = p2.X - p1.X;
+            vectors.Y = p2.Y - p1.Y;
 
             var i = 0;
             while ((i < polygon.nPoints) && visible)
@@ -30,7 +30,7 @@ namespace ImageEditor.ViewModel.Helpers
                 F.X = p1.X - polygon.v[i].X;
                 F.Y = p1.Y - polygon.v[i].Y;
                 var num = DotProduct(n[i], new Point(F.X, F.Y));
-                var den = DotProduct(n[i], new Point(dirV.X, dirV.Y));
+                var den = DotProduct(n[i], new Point(vectors.X, vectors.Y));
 
                 if (Math.Abs(den) < 0.01) // Parallel or Point
                 {
@@ -64,10 +64,10 @@ namespace ImageEditor.ViewModel.Helpers
             }
             if (t1 <= t2)
             {
-                rp.X = (int)(p1.X + t1 * dirV.X);
-                rp.Y = (int)(p1.Y + t1 * dirV.Y);
-                q.X = (int)(p1.X + t2 * dirV.X);
-                q.Y = (int)(p1.Y + t2 * dirV.Y);
+                rp.X = (int)(p1.X + t1 * vectors.X);
+                rp.Y = (int)(p1.Y + t1 * vectors.Y);
+                q.X = (int)(p1.X + t2 * vectors.X);
+                q.Y = (int)(p1.Y + t2 * vectors.Y);
             }
             else
             {
@@ -77,12 +77,7 @@ namespace ImageEditor.ViewModel.Helpers
             return visible;
         }
 
-
-
-        // compute the outer normals.  
-        // note that this requires that the polygon be convex
-        // to always work
-        public static Point[] CalcNormals(List<Point> points)//points are polygon points
+        public static Point[] CalcNormals(List<Point> points)
         {
             var normals = new Point[points.Count];
 
@@ -96,7 +91,7 @@ namespace ImageEditor.ViewModel.Helpers
                 normals[i].Y = 1;
                 v.X = points[k].X - points[i].X;
                 v.Y = points[k].Y - points[i].Y;
-                if (DotProduct(normals[i], new Point(v.X, v.Y)) > 0F) // inner normal
+                if (DotProduct(normals[i], new Point(v.X, v.Y)) > 0F)
                 {
                     normals[i].X *= -1;
                     normals[i].Y = -1;

@@ -36,7 +36,7 @@ namespace ImageEditor.ViewModel
         #endregion
 
         #region properties
-        public Color SelectedColor { get; set; } = Color.Red;
+        public Color SelectedColor { get; set; } = Color.Blue;
         public List<Color> Colors => new List<Color>
         {
             Color.Red, Color.Blue, Color.Yellow

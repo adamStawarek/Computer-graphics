@@ -32,7 +32,7 @@ namespace ImageEditor.ViewModel.Helpers
         public int CalculateX(int x)
         {
             this._i = (int)Math.Ceiling((_startPoint.X + (_ratio * (x - _startPoint.Y))));
-            return (int)Math.Ceiling(((_startPoint.X + (_ratio * (x - _startPoint.Y)))));
+            return _i;
         }
 
         public int CompareTo(EdgeData other)
