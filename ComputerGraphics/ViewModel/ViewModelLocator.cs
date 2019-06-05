@@ -14,6 +14,7 @@ namespace ImageEditor.ViewModel
             SimpleIoc.Default.Register<FilterDesignerViewModel>();
             SimpleIoc.Default.Register<CanvasViewModel>();
             SimpleIoc.Default.Register<ClippingViewModel>();
+            SimpleIoc.Default.Register<StereoscopyViewModel>();
         }
 
         public MainViewModel Main
@@ -46,6 +47,14 @@ namespace ImageEditor.ViewModel
             get
             {
                 return ServiceLocator.Current.GetInstance<ClippingViewModel>();
+            }
+        }
+
+        public StereoscopyViewModel Stereoscopy
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<StereoscopyViewModel>();
             }
         }
 

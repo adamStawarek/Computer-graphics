@@ -119,6 +119,7 @@
     <Compile Include="ViewModel\Helpers\CyrusBeck.cs" />
     <Compile Include="ViewModel\Helpers\EdgeData.cs" />
     <Compile Include="ViewModel\Helpers\RasterGraphicViewModel.cs" />
+    <Compile Include="ViewModel\StereoscopyViewModel.cs" />
     <Compile Include="Views\CanvasView.xaml.cs">
       <DependentUpon>CanvasView.xaml</DependentUpon>
     </Compile>
@@ -146,6 +147,9 @@
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
+    <Compile Include="Views\StereoscopyView.xaml.cs">
+      <DependentUpon>StereoscopyView.xaml</DependentUpon>
+    </Compile>
     <Page Include="Views\CanvasView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -168,6 +172,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\StereoscopyView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

@@ -94,6 +94,8 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="50"/>
                 </Grid.RowDefinitions>
+                <views:StereoscopyView HorizontalAlignment="Left" VerticalAlignment="Top"
+                                       Visibility="{Binding IsChecked,ElementName=RbAnaglyph,Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 <views:CanvasView HorizontalAlignment="Left" VerticalAlignment="Top"
                                     Visibility="{Binding IsChecked,ElementName=RbCanvas,Converter={StaticResource BoolToVisibilityConverter}}"/>
                 <views:ClippingView HorizontalAlignment="Left" VerticalAlignment="Top"
@@ -135,9 +137,14 @@
                 <Border BorderThickness="0,1,0,0" Grid.Row="1" BorderBrush="LightGray">
                     <Grid  HorizontalAlignment="Stretch"  Background="White">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                            <RadioButton FontSize="16" Style="{StaticResource MaterialDesignRadioButton}" GroupName="ViewOption"  IsChecked="True" Content="Drawing lines and circles" x:Name="RbClipping" Margin="0,0,10,0"/>
-                            <RadioButton FontSize="16" Style="{StaticResource MaterialDesignRadioButton}" GroupName="ViewOption" Content="Clipping and filling"  x:Name="RbCanvas" Margin="0,0,10,0"/>
-                            <RadioButton FontSize="16" Style="{StaticResource MaterialDesignRadioButton}" GroupName="ViewOption" Content="Image filtering" x:Name="RbImage"  Margin="0,0,10,0"/>
+                            <RadioButton FontSize="16" Style="{StaticResource MaterialDesignRadioButton}" 
+                                         GroupName="ViewOption"  IsChecked="True" Content="Anaglyph stereoscopy" x:Name="RbAnaglyph" Margin="0,0,10,0"/>
+                            <RadioButton FontSize="16" Style="{StaticResource MaterialDesignRadioButton}" 
+                                         GroupName="ViewOption"  Content="Drawing lines and circles" x:Name="RbClipping" Margin="0,0,10,0"/>
+                            <RadioButton FontSize="16" Style="{StaticResource MaterialDesignRadioButton}"
+                                         GroupName="ViewOption" Content="Clipping and filling"  x:Name="RbCanvas" Margin="0,0,10,0"/>
+                            <RadioButton FontSize="16" Style="{StaticResource MaterialDesignRadioButton}"
+                                         GroupName="ViewOption" Content="Image filtering" x:Name="RbImage"  Margin="0,0,10,0"/>
                         </StackPanel>
                     </Grid>
                 </Border>
