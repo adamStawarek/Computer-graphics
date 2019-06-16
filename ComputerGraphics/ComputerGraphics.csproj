@@ -119,6 +119,8 @@
     <Compile Include="ViewModel\Helpers\CyrusBeck.cs" />
     <Compile Include="ViewModel\Helpers\EdgeData.cs" />
     <Compile Include="ViewModel\Helpers\RasterGraphicViewModel.cs" />
+    <Compile Include="ViewModel\Helpers\Triangle.cs" />
+    <Compile Include="ViewModel\Helpers\Vertex.cs" />
     <Compile Include="ViewModel\StereoscopyViewModel.cs" />
     <Compile Include="Views\CanvasView.xaml.cs">
       <DependentUpon>CanvasView.xaml</DependentUpon>

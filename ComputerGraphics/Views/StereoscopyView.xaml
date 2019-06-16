@@ -16,7 +16,8 @@
                Source="{Binding Bitmap,NotifyOnSourceUpdated=True}" Grid.Column="0" >
         </Image>
         <StackPanel VerticalAlignment="Stretch" Grid.Column="1" Background="White">
-
+            <Button Command="{Binding DrawShapesCommand}" FontSize="16" Width="150"
+                    HorizontalAlignment="Center" Margin="5"/>
         </StackPanel>
     </Grid>
 </UserControl>
