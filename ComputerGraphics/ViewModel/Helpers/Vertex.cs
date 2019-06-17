@@ -33,24 +33,24 @@
             this.n[2][0] = z / r;
             this.n[3][0] = 0;
         }
-        public double[][] getP()
+        public double[][] GetP()
         {
             return p;
         }
-        public double getX()
+        public double GetX()
         {
             return x;
         }
-        public double getY()
+        public double GetY()
         {
             return y;
         }
-        public void setXandY(double x, double y)
+        public void SetXY(double x, double y)
         {
             this.x = x;
             this.y = y;
         }
-        public void setT(double[][] t)
+        public void SetT(double[][] t)
         {
             this.t = t;
         }

@@ -114,6 +114,7 @@
     <Compile Include="Helpers\PrimaryColor.cs" />
     <Compile Include="ViewModel\CanvasViewModel.cs" />
     <Compile Include="ViewModel\ClippingViewModel.cs" />
+    <Compile Include="ViewModel\ConfigurationViewModel.cs" />
     <Compile Include="ViewModel\FilterDesignerViewModel.cs" />
     <Compile Include="Filters\Interfaces\IParamized.cs" />
     <Compile Include="ViewModel\Helpers\CyrusBeck.cs" />
