@@ -10,7 +10,7 @@
     <Grid x:Name="Main">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="300"/>
         </Grid.ColumnDefinitions>
         <Image Stretch="None" Margin="0" 
                Source="{Binding Bitmap,NotifyOnSourceUpdated=True}" Grid.Column="0" >
