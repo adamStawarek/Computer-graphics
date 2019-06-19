@@ -54,6 +54,10 @@
         {
             this.t = t;
         }
+        public void SetN(double[][] n)
+        {
+            this.n = n;
+        }
     }
 
 }
