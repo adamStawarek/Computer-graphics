@@ -19,7 +19,6 @@ namespace ImageEditor.ViewModel
         private const int BitmapHeight = 1000;
         private readonly byte[,,] _pixels;
         private int _stride;
-        private double r = 1, theta = (Math.PI / 1.5), zoom = 1.5, alphaX, alphaY;
         private double[][] t = {
             new Double[]{ 1, 0, 0, 0 },
             new Double[]{ 0, 1, 0, 0 },
@@ -28,32 +27,65 @@ namespace ImageEditor.ViewModel
         }, P1, P2, T;
         private Vertex[] _verticesL, _verticesR;
         private Triangle[] _trianglesL, _trianglesR;
-        private int m = 50, n = 50;
-        private double _cx = BitmapWidth / 3, Cy = BitmapHeight / 3, e = 50;
-        private double _cuboidWidth=2, _cuboidHeight=2, _cuboidDepth=2;
-        private double _cylinderH = 2, _cylinderR = 1;
-        private int  _cylinderN = 10;
+
+        //general
+        private double e = 50;
+        private double theta = (Math.PI / 1.5), _zoom = 1.5;
+        //sphere
+        private double _sphereCx, _sphereCy;
+        private double _sphereRx, _sphereRy;
+        private int _sphereM, _sphereN;
+        private double _sphereR;
+        //cuboid
+        private double _cuboidCx, _cuboidCy;
+        private double _cuboidWidth, _cuboidHeight, _cuboidDepth;
+        private double _cuboidRx, _cuboidRy;
+        //cylinder
+        private double _cylinderCx, _cylinderCy;
+        private double _cylinderH, _cylinderR;
+        private double _cylinderRx, _cylinderRy;
+        private int _cylinderN;
         #endregion
 
         #region properties
-        public List<ConfigurationViewModel> Configuration { get; set; } = new List<ConfigurationViewModel>
+        public List<ConfigurationViewModel> GeneralSettings { get; set; } = new List<ConfigurationViewModel>
         {
-            new ConfigurationViewModel("Radius",1 ),
             new ConfigurationViewModel("Zoom",1.5 ),
+            new ConfigurationViewModel("Distance between the eyes (mm)", 50)
+        };
+
+        public List<ConfigurationViewModel> CuboidSettings { get; set; } = new List<ConfigurationViewModel>
+        {
+            new ConfigurationViewModel("Rotate X",70),
+            new ConfigurationViewModel("Rotate Y",5),
+            new ConfigurationViewModel("Center X",BitmapWidth/3),
+            new ConfigurationViewModel("Center Y",BitmapHeight/3),
+            new ConfigurationViewModel("Cuboid width", 3),
+            new ConfigurationViewModel("Cuboid height", 2),
+            new ConfigurationViewModel("Cuboid depth", 2)
+        };
+        public List<ConfigurationViewModel> SphereSettings { get; set; } = new List<ConfigurationViewModel>
+        {
+            new ConfigurationViewModel("Radius",0.5 ),
             new ConfigurationViewModel("Number of meridians",50),
             new ConfigurationViewModel("Number of parallels",50 ),
             new ConfigurationViewModel("Rotate X",0),
             new ConfigurationViewModel("Rotate Y",0),
-            new ConfigurationViewModel("Center X",BitmapWidth/3),
-            new ConfigurationViewModel("Center Y",BitmapHeight/3),
-            new ConfigurationViewModel("Distance between the eyes (mm)", 50),
-            new ConfigurationViewModel("Cuboid width", 2),
-            new ConfigurationViewModel("Cuboid height", 2),
-            new ConfigurationViewModel("Cuboid depth", 2),
-            new ConfigurationViewModel("Cylinder height", 2),
-            new ConfigurationViewModel("Cylinder base radius", 1),
-            new ConfigurationViewModel("Cylinder #sides prism", 10)
+            new ConfigurationViewModel("Center X",750),
+            new ConfigurationViewModel("Center Y",500)
         };
+        public List<ConfigurationViewModel> CylinderSettings { get; set; } = new List<ConfigurationViewModel>
+        {
+            new ConfigurationViewModel("Rotate X",170),
+            new ConfigurationViewModel("Rotate Y",0),
+            new ConfigurationViewModel("Center X",500),
+            new ConfigurationViewModel("Center Y",320),
+            new ConfigurationViewModel("Cylinder height", 0.8),
+            new ConfigurationViewModel("Cylinder base radius", 0.8),
+            new ConfigurationViewModel("Cylinder #sides prism", 70)
+        };
+
+
         public WriteableBitmap Bitmap
         {
             get => _bitmap;
@@ -74,53 +106,77 @@ namespace ImageEditor.ViewModel
         {
             _pixels = new byte[BitmapHeight, BitmapWidth, 4];
             ResetBitmap();
-            DrawShapesCommand = new RelayCommand(DrawCylinder);
+            DrawShapesCommand = new RelayCommand(DrawShapes);
             ChangeConfigurationCommand = new RelayCommand(ChangeConfiguration);
+            ChangeConfiguration();
         }
 
         private void ChangeConfiguration()
         {
-            r = Configuration.First(c => c.Description == "Radius").Value;
-            zoom = Configuration.First(c => c.Description == "Zoom").Value;
-            m = (int)Configuration.First(c => c.Description == "Number of meridians").Value;
-            n = (int)Configuration.First(c => c.Description == "Number of parallels").Value;
-            alphaX = Configuration.First(c => c.Description == "Rotate X").Value;
-            alphaY = Configuration.First(c => c.Description == "Rotate Y").Value;
-            _cx = Configuration.First(c => c.Description == "Center X").Value;
-            Cy = Configuration.First(c => c.Description == "Center Y").Value;
-            e = Configuration.First(c => c.Description == "Distance between the eyes (mm)").Value;
-            _cuboidWidth = Configuration.First(c => c.Description == "Cuboid width").Value;
-            _cuboidHeight = Configuration.First(c => c.Description == "Cuboid height").Value;
-            _cuboidDepth = Configuration.First(c => c.Description == "Cuboid depth").Value;
-            _cylinderN = (int)Configuration.First(c => c.Description == "Cylinder #sides prism").Value;
-            _cylinderH = Configuration.First(c => c.Description == "Cylinder height").Value;
-            _cylinderR = Configuration.First(c => c.Description == "Cylinder base radius").Value; 
-
-             t = new[]
-            {
+            //sphere
+            _sphereR = SphereSettings.First(c => c.Description == "Radius").Value;
+            _sphereCx = SphereSettings.First(c => c.Description == "Center X").Value;
+            _sphereCy = SphereSettings.First(c => c.Description == "Center Y").Value;
+            _sphereM = (int)SphereSettings.First(c => c.Description == "Number of meridians").Value;
+            _sphereN = (int)SphereSettings.First(c => c.Description == "Number of parallels").Value;
+            _sphereRy = SphereSettings.First(c => c.Description == "Rotate Y").Value;
+            _sphereRx = SphereSettings.First(c => c.Description == "Rotate X").Value;
+            //cylinder
+            _cylinderN = (int)CylinderSettings.First(c => c.Description == "Cylinder #sides prism").Value;
+            _cylinderH = CylinderSettings.First(c => c.Description == "Cylinder height").Value;
+            _cylinderR = CylinderSettings.First(c => c.Description == "Cylinder base radius").Value;
+            _cylinderCx = CylinderSettings.First(c => c.Description == "Center X").Value;
+            _cylinderCy = CylinderSettings.First(c => c.Description == "Center Y").Value;
+            _cylinderRy = CylinderSettings.First(c => c.Description == "Rotate Y").Value;
+            _cylinderRx = CylinderSettings.First(c => c.Description == "Rotate X").Value;
+            //cuboid
+            _cuboidWidth = CuboidSettings.First(c => c.Description == "Cuboid width").Value;
+            _cuboidHeight = CuboidSettings.First(c => c.Description == "Cuboid height").Value;
+            _cuboidDepth = CuboidSettings.First(c => c.Description == "Cuboid depth").Value;
+            _cuboidCx = CuboidSettings.First(c => c.Description == "Center X").Value;
+            _cuboidCy = CuboidSettings.First(c => c.Description == "Center Y").Value;
+            _cuboidRy = CuboidSettings.First(c => c.Description == "Rotate Y").Value;
+            _cuboidRx = CuboidSettings.First(c => c.Description == "Rotate X").Value;
+            //general
+            _zoom = GeneralSettings.First(c => c.Description == "Zoom").Value;
+            e = GeneralSettings.First(c => c.Description == "Distance between the eyes (mm)").Value;
+            t = new[]
+           {
                 new Double[] {1, 0, 0, 0},
                 new Double[] {0, 1, 0, 0},
-                new Double[] {0, 0, 1, zoom},
+                new Double[] {0, 0, 1, _zoom},
                 new Double[] {0, 0, 0, 1}
             };
         }
 
-        public void DrawSphere()
+        private void DrawShapes()
         {
             ResetBitmap();
-            double s = _cx * (1 / Math.Tan(theta / 2));
+            DrawCylinder();
+            DrawSphere();
+            DrawCuboid();
+            SetBitmap();
+        }
+
+        public void DrawSphere()
+        {
+            var cx = _sphereCx;
+            var cy = _sphereCy;
+
+            double s = cx * (1 / Math.Tan(theta / 2));
             e = e / 1000.0;
+
             P1 = new[]
             {
-                new[] {s, 0, _cx, (s*e)/2},
-                new[] {0, -s, Cy, 0},
+                new[] {s, 0, cx, (s*e)/2},
+                new[] {0, -s, cy, 0},
                 new double[] {0, 0, 0, 1},
                 new double[] {0, 0, 1, 0}
             };
             P2 = new[]
             {
-                new[] {s, 0, _cx, -(s*e)/2},
-                new[] {0, -s, Cy, 0},
+                new[] {s, 0, cx, -(s*e)/2},
+                new[] {0, -s, cy, 0},
                 new double[] {0, 0, 0, 1},
                 new double[] {0, 0, 1, 0}
             };
@@ -128,67 +184,71 @@ namespace ImageEditor.ViewModel
             _verticesL = CreateSphereVertices();
             _verticesR = CreateSphereVertices();
 
-            TransformAndProject(P1, _verticesL);
-            TransformAndProject(P2, _verticesR);
+            TransformAndProject(P1, _verticesL, _sphereRx, _sphereRy);
+            TransformAndProject(P2, _verticesR, _sphereRx, _sphereRy);
 
             _trianglesL = CreateSphereTriangles(_verticesL);
             _trianglesR = CreateSphereTriangles(_verticesR);
 
             DrawMesh(_trianglesL, Color.FromRgb(255, 0, 0));
             DrawMesh(_trianglesR, Color.FromRgb(0, 255, 255));
-            SetBitmap();
         }
 
         public void DrawCuboid()
         {
-            ResetBitmap();
-            double s = _cx * (1 / Math.Tan(theta / 2));
+            var cx = _cuboidCx;
+            var cy = _cuboidCy;
+
+            double s = cx * (1 / Math.Tan(theta / 2));
             e = e / 1000.0;
+
             P1 = new[]
             {
-                new[] {s, 0, _cx, (s*e)/2},
-                new[] {0, -s, Cy, 0},
+                new[] {s, 0, cx, (s*e)/2},
+                new[] {0, -s, cy, 0},
                 new double[] {0, 0, 0, 1},
                 new double[] {0, 0, 1, 0}
             };
             P2 = new[]
             {
-                new[] {s, 0, _cx, -(s*e)/2},
-                new[] {0, -s, Cy, 0},
+                new[] {s, 0, cx, -(s*e)/2},
+                new[] {0, -s, cy, 0},
                 new double[] {0, 0, 0, 1},
                 new double[] {0, 0, 1, 0}
             };
 
             _verticesL = CreateCuboidVertices();
-            //_verticesR = CreateCuboidVertices();
+            _verticesR = CreateCuboidVertices();
 
-            TransformAndProject(P1, _verticesL);
-            //TransformAndProject(P2, _verticesR);
+            TransformAndProject(P1, _verticesL, _cuboidRx, _cuboidRy);
+            TransformAndProject(P2, _verticesR, _cuboidRx, _cuboidRy);
 
             _trianglesL = CreateCuboidTriangles(_verticesL);
-            //_trianglesR = CreateCuboidTriangles(_verticesR);
+            _trianglesR = CreateCuboidTriangles(_verticesR);
 
             DrawMesh(_trianglesL, Color.FromRgb(255, 0, 0));
-            //DrawMesh(_trianglesR, Color.FromRgb(0, 255, 255));
-            SetBitmap();
+            DrawMesh(_trianglesR, Color.FromRgb(0, 255, 255));
         }
 
         public void DrawCylinder()
         {
-            ResetBitmap();
-            double s = _cx * (1 / Math.Tan(theta / 2));
+            var cx = _cylinderCx;
+            var cy = _cylinderCy;
+
+            double s = cx * (1 / Math.Tan(theta / 2));
             e = e / 1000.0;
+
             P1 = new[]
             {
-                new[] {s, 0, _cx, (s*e)/2},
-                new[] {0, -s, Cy, 0},
+                new[] {s, 0, cx, (s*e)/2},
+                new[] {0, -s, cy, 0},
                 new double[] {0, 0, 0, 1},
                 new double[] {0, 0, 1, 0}
             };
             P2 = new[]
             {
-                new[] {s, 0, _cx, -(s*e)/2},
-                new[] {0, -s, Cy, 0},
+                new[] {s, 0, cx, -(s*e)/2},
+                new[] {0, -s, cy, 0},
                 new double[] {0, 0, 0, 1},
                 new double[] {0, 0, 1, 0}
             };
@@ -196,62 +256,18 @@ namespace ImageEditor.ViewModel
             _verticesL = CreateCylinderVertices();
             _verticesR = CreateCylinderVertices();
 
-            TransformAndProject(P1, _verticesL);
-            TransformAndProject(P2, _verticesR);
+            TransformAndProject(P1, _verticesL, _cylinderRx, _cylinderRy);
+            TransformAndProject(P2, _verticesR, _cylinderRx, _cylinderRy);
 
             _trianglesL = CreateCylinderTriangles(_verticesL);
             _trianglesR = CreateCylinderTriangles(_verticesR);
 
             DrawMesh(_trianglesL, Color.FromRgb(255, 0, 0));
             DrawMesh(_trianglesR, Color.FromRgb(0, 255, 255));
-            SetBitmap();
         }
 
         private Vertex[] CreateCuboidVertices()
         {
-            var nRight = new[]
-            {
-                new double[] {1},
-                new double[] {0},
-                new double[] {0},
-                new double[] {0}
-            };
-            var nLeft = new[]
-            {
-                new double[] {-1},
-                new double[] {0},
-                new double[] {0},
-                new double[] {0}
-            };
-            var nTop = new[]
-            {
-                new double[] {0},
-                new double[] {1},
-                new double[] {0},
-                new double[] {0}
-            };
-            var nBottom = new[]
-            {
-                new double[] {0},
-                new double[] {-1},
-                new double[] {0},
-                new double[] {0}
-            };
-            var nFront = new[]
-            {
-                new double[] {0},
-                new double[] {0},
-                new double[] {1},
-                new double[] {0}
-            };
-            var nBack = new[]
-            {
-                new double[] {0},
-                new double[] {0},
-                new double[] {-1},
-                new double[] {0}
-            };
-
             Vertex[] v = new Vertex[24];
             //front
             v[0] = new Vertex(0, 0, 0, 1);
@@ -262,32 +278,35 @@ namespace ImageEditor.ViewModel
             v[4] = new Vertex(0, 0, _cuboidDepth, 1);
             v[5] = new Vertex(_cuboidWidth, 0, _cuboidDepth, 1);
             v[6] = new Vertex(_cuboidWidth, _cuboidHeight, _cuboidDepth, 1);
-            v[7] = new Vertex(0, _cuboidHeight, _cuboidDepth, 1);           
+            v[7] = new Vertex(0, _cuboidHeight, _cuboidDepth, 1);
             //left
-            v[8]=new Vertex(0,0,0,1);
-            v[9]=new Vertex(0,0,_cuboidDepth,1);
-            v[10]=new Vertex(0,_cuboidHeight,_cuboidDepth,1);
-            v[11]=new Vertex(0,_cuboidHeight,0,1);
+            v[8] = new Vertex(0, 0, 0, 1);
+            v[9] = new Vertex(0, 0, _cuboidDepth, 1);
+            v[10] = new Vertex(0, _cuboidHeight, _cuboidDepth, 1);
+            v[11] = new Vertex(0, _cuboidHeight, 0, 1);
             //right            
-            v[12]=new Vertex(_cuboidWidth,0,0,1);
-            v[13]=new Vertex(_cuboidWidth,0,_cuboidDepth,1);
-            v[14]=new Vertex(_cuboidWidth,_cuboidHeight,_cuboidDepth,1);
-            v[15]=new Vertex(_cuboidWidth,_cuboidHeight,0,1);
+            v[12] = new Vertex(_cuboidWidth, 0, 0, 1);
+            v[13] = new Vertex(_cuboidWidth, 0, _cuboidDepth, 1);
+            v[14] = new Vertex(_cuboidWidth, _cuboidHeight, _cuboidDepth, 1);
+            v[15] = new Vertex(_cuboidWidth, _cuboidHeight, 0, 1);
             //bottom
-            v[16]=new Vertex(0,0,0,1);
-            v[17]=new Vertex(_cuboidWidth,0,0,1);
-            v[18]=new Vertex(_cuboidWidth,0,_cuboidDepth,1);
-            v[19]=new Vertex(0,0,_cuboidDepth,1);
+            v[16] = new Vertex(0, 0, 0, 1);
+            v[17] = new Vertex(_cuboidWidth, 0, 0, 1);
+            v[18] = new Vertex(_cuboidWidth, 0, _cuboidDepth, 1);
+            v[19] = new Vertex(0, 0, _cuboidDepth, 1);
             //top
-            v[20]=new Vertex(0,_cuboidHeight,0,1);
-            v[21]=new Vertex(_cuboidWidth,_cuboidHeight,0,1);
-            v[22]=new Vertex(_cuboidWidth,_cuboidHeight,_cuboidDepth,1);
-            v[23]=new Vertex(0,_cuboidHeight,_cuboidDepth,1);
+            v[20] = new Vertex(0, _cuboidHeight, 0, 1);
+            v[21] = new Vertex(_cuboidWidth, _cuboidHeight, 0, 1);
+            v[22] = new Vertex(_cuboidWidth, _cuboidHeight, _cuboidDepth, 1);
+            v[23] = new Vertex(0, _cuboidHeight, _cuboidDepth, 1);
             return v;
         }
 
         private Vertex[] CreateSphereVertices()
         {
+            var m = _sphereM;
+            var n = _sphereN;
+            var r = _sphereR;
             Vertex[] v = new Vertex[m * n + 2];
             double a, b, c;
             v[0] = new Vertex(0, r, 0, 1);
@@ -312,40 +331,40 @@ namespace ImageEditor.ViewModel
 
         private Vertex[] CreateCylinderVertices()
         {
-            Vertex[] v = new Vertex[ 4*_cylinderN + 2];
+            Vertex[] v = new Vertex[4 * _cylinderN + 2];
             double a, b, c;
             v[0] = new Vertex(0, _cylinderH, 0, 1);
-           
-            for (int i = 0; i <= _cylinderN-1; i++)
+
+            for (int i = 0; i <= _cylinderN - 1; i++)
             {
                 a = _cylinderR * Math.Cos((2 * Math.PI * i) / _cylinderN);
                 b = _cylinderH;
                 c = _cylinderR * Math.Sin((2 * Math.PI * i) / _cylinderN);
-                v[i+1]=new Vertex(a,b,c,1);
+                v[i + 1] = new Vertex(a, b, c, 1);
             }
             for (int i = 0; i <= _cylinderN - 1; i++)
             {
                 a = _cylinderR * Math.Cos((2 * Math.PI * i) / _cylinderN);
                 b = 0;
                 c = _cylinderR * Math.Sin((2 * Math.PI * i) / _cylinderN);
-                v[3*_cylinderN+i+1] = new Vertex(a, b, c, 1);
+                v[3 * _cylinderN + i + 1] = new Vertex(a, b, c, 1);
             }
 
             v[4 * _cylinderN + 1] = new Vertex(0, 0, 0, 1);
-            for (int i = _cylinderN+1; i <= 2*_cylinderN; i++)
+            for (int i = _cylinderN + 1; i <= 2 * _cylinderN; i++)
             {
                 v[i] = v[i - _cylinderN];
             }
-            
 
-            for (int i = 2*_cylinderN + 1; i <= 3 * _cylinderN; i++)
+
+            for (int i = 2 * _cylinderN + 1; i <= 3 * _cylinderN; i++)
             {
-                v[i] = v[i +_cylinderN];
+                v[i] = v[i + _cylinderN];
             }
             return v;
         }
 
-        private void TransformAndProject(double[][] p, Vertex[] vertices)
+        private void TransformAndProject(double[][] p, Vertex[] vertices, double alphaX, double alphaY)
         {
             double[][] rx ={
                 new[]{ 1.0, 0, 0, 0 },
@@ -400,7 +419,7 @@ namespace ImageEditor.ViewModel
         {
             var t = new Triangle[12];
             //front
-            t[0]=new Triangle(v[0],v[1],v[2]);
+            t[0] = new Triangle(v[0], v[1], v[2]);
             t[1] = new Triangle(v[0], v[2], v[3]);
             //back
             t[2] = new Triangle(v[4], v[5], v[6]);
@@ -422,6 +441,9 @@ namespace ImageEditor.ViewModel
 
         private Triangle[] CreateSphereTriangles(Vertex[] v)
         {
+            var m = _sphereM;
+            var n = _sphereN;
+
             var t = new Triangle[2 * m * n];
             for (int i = 0; i < m - 1; i++)
             {
@@ -446,31 +468,31 @@ namespace ImageEditor.ViewModel
         private Triangle[] CreateCylinderTriangles(Vertex[] v)
         {
             var t = new Triangle[4 * _cylinderN];
-            for (int i = 0; i <= _cylinderN-2; i++)
+            for (int i = 0; i <= _cylinderN - 2; i++)
             {
-                t[i]=new Triangle(v[0],v[i+2],v[i+1]);
+                t[i] = new Triangle(v[0], v[i + 2], v[i + 1]);
             }
-            t[_cylinderN-1]=new Triangle(v[0],v[1],v[_cylinderN]);
-            for (int i = 3*_cylinderN; i <= 4*_cylinderN - 2; i++)
+            t[_cylinderN - 1] = new Triangle(v[0], v[1], v[_cylinderN]);
+            for (int i = 3 * _cylinderN; i <= 4 * _cylinderN - 2; i++)
             {
-                t[i] = new Triangle(v[4*_cylinderN+1], v[i+1], v[i + 2]);
+                t[i] = new Triangle(v[4 * _cylinderN + 1], v[i + 1], v[i + 2]);
             }
-            t[4*_cylinderN - 1] = new Triangle(v[4*_cylinderN+1], 
-                v[4*_cylinderN], v[3*_cylinderN+1]);
+            t[4 * _cylinderN - 1] = new Triangle(v[4 * _cylinderN + 1],
+                v[4 * _cylinderN], v[3 * _cylinderN + 1]);
 
             for (int i = _cylinderN; i <= 2 * _cylinderN - 2; i++)
             {
-                t[i] = new Triangle(v[i + 1], v[i + 2], v[i + 1+_cylinderN]);
+                t[i] = new Triangle(v[i + 1], v[i + 2], v[i + 1 + _cylinderN]);
             }
             t[2 * _cylinderN - 1] = new Triangle(v[2 * _cylinderN],
-                v[_cylinderN+1], v[3 * _cylinderN]);
-            for (int i = 2*_cylinderN; i <= 3 * _cylinderN - 2; i++)
+                v[_cylinderN + 1], v[3 * _cylinderN]);
+            for (int i = 2 * _cylinderN; i <= 3 * _cylinderN - 2; i++)
             {
-                t[i] = new Triangle(v[i + 1], v[i + 2-_cylinderN],
+                t[i] = new Triangle(v[i + 1], v[i + 2 - _cylinderN],
                     v[i + 2]);
             }
             t[3 * _cylinderN - 1] = new Triangle(v[3 * _cylinderN],
-                v[_cylinderN + 1], v[2 * _cylinderN+1]);
+                v[_cylinderN + 1], v[2 * _cylinderN + 1]);
 
             return t;
         }
@@ -560,17 +582,10 @@ namespace ImageEditor.ViewModel
         }
         private void DrawPoint(Point p, Color color)
         {
-            try
-            {
-                _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 0] = color.B;
-                _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 1] = color.G;
-                _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 2] = color.R;
-            }
-            catch (Exception)
-            {
-
-                //throw;
-            }
+            if (p.X >= BitmapWidth || p.X <= 0 || p.Y >= BitmapHeight || p.Y <= 0) return;
+            _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 0] = color.B;
+            _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 1] = color.G;
+            _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 2] = color.R;
         }
         #endregion
 

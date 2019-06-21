@@ -85,7 +85,7 @@
         </Menu>
         <Grid DockPanel.Dock="Bottom" Margin="10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="3.8*"/>
                 <ColumnDefinition Width="5" />
                 <ColumnDefinition Width="*" MinWidth="280"/>
             </Grid.ColumnDefinitions>
@@ -174,7 +174,7 @@
                             </StackPanel>
                         </ScrollViewer>
                     </Expander>
-                    <Expander HorizontalAlignment="Stretch" Header="Filter Designer" IsExpanded="True" DataContext="{Binding Source={StaticResource Locator}, Path=Designer}">
+                    <Expander HorizontalAlignment="Stretch" Header="Filter Designer" DataContext="{Binding Source={StaticResource Locator}, Path=Designer}">
 
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">

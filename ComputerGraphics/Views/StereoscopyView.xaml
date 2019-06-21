@@ -15,21 +15,61 @@
         <Image Stretch="None" Margin="0" 
                Source="{Binding Bitmap,NotifyOnSourceUpdated=True}" Grid.Column="0" >
         </Image>
-        <StackPanel VerticalAlignment="Stretch" Grid.Column="1" Background="White">
-            <ItemsControl ItemsSource="{Binding Configuration}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <Label FontSize="16" Foreground="Gray" Content="{Binding Description,Mode=OneWay}"/>
-                            <TextBox FontSize="16" Text="{Binding Value,Mode=TwoWay}"/>
-                        </StackPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+        <StackPanel VerticalAlignment="Stretch" Grid.Column="1" Background="#f4f4f4">
+            <StackPanel Height="600">
+                <Expander Header="General">
+                    <ItemsControl ItemsSource="{Binding GeneralSettings}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Background="#f4f4f4">
+                                    <Label FontSize="16" Foreground="Gray" Content="{Binding Description,Mode=OneWay}"/>
+                                    <TextBox FontSize="16" Text="{Binding Value,Mode=TwoWay}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Expander>
+                <Expander Header="Cuboid">
+                    <ItemsControl ItemsSource="{Binding CuboidSettings}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Background="#f4f4f4">
+                                    <Label FontSize="16" Foreground="Gray" Content="{Binding Description,Mode=OneWay}"/>
+                                    <TextBox FontSize="16" Text="{Binding Value,Mode=TwoWay}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Expander>
+                <Expander Header="Cylinder">
+                    <ItemsControl ItemsSource="{Binding CylinderSettings}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Background="#f4f4f4">
+                                    <Label FontSize="16" Foreground="Gray" Content="{Binding Description,Mode=OneWay}"/>
+                                    <TextBox FontSize="16" Text="{Binding Value,Mode=TwoWay}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Expander>
+                <Expander Header="Sphere">
+                    <ItemsControl ItemsSource="{Binding SphereSettings}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Background="#f4f4f4">
+                                    <Label FontSize="16" Foreground="Gray" Content="{Binding Description,Mode=OneWay}"/>
+                                    <TextBox FontSize="16" Text="{Binding Value,Mode=TwoWay}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Expander>
+            </StackPanel>
             <Button Command="{Binding ChangeConfigurationCommand}" FontSize="16" Width="200"
-                    HorizontalAlignment="Center" Margin="5" Content="Change configuration"/>
+                    HorizontalAlignment="Center" Margin="5" Content="Change settings"/>
             <Button Command="{Binding DrawShapesCommand}" FontSize="16" Width="150"
-                    HorizontalAlignment="Center" Margin="5" Content="Draw Sphere"/>
+                    HorizontalAlignment="Center" Margin="5" Content="Draw Shapes"/>
         </StackPanel>
     </Grid>
 </UserControl>
