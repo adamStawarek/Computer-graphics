@@ -24,9 +24,7 @@ namespace ImageEditor.ViewModel
             new Double[]{ 0, 1, 0, 0 },
             new Double[]{ 0, 0, 1, 2 },
             new Double[]{ 0, 0, 0, 1 }
-        }, P1, P2, T;
-        private Vertex[] _verticesL, _verticesR;
-        private Triangle[] _trianglesL, _trianglesR;
+        };
 
         //general
         private double e = 50;
@@ -53,14 +51,13 @@ namespace ImageEditor.ViewModel
             new ConfigurationViewModel("Zoom",1.5 ),
             new ConfigurationViewModel("Distance between the eyes (mm)", 50)
         };
-
         public List<ConfigurationViewModel> CuboidSettings { get; set; } = new List<ConfigurationViewModel>
         {
             new ConfigurationViewModel("Rotate X",70),
             new ConfigurationViewModel("Rotate Y",5),
-            new ConfigurationViewModel("Center X",BitmapWidth/3),
-            new ConfigurationViewModel("Center Y",BitmapHeight/3),
-            new ConfigurationViewModel("Cuboid width", 3),
+            new ConfigurationViewModel("Center X",300),
+            new ConfigurationViewModel("Center Y",450),
+            new ConfigurationViewModel("Cuboid width", 4),
             new ConfigurationViewModel("Cuboid height", 2),
             new ConfigurationViewModel("Cuboid depth", 2)
         };
@@ -84,8 +81,6 @@ namespace ImageEditor.ViewModel
             new ConfigurationViewModel("Cylinder base radius", 0.8),
             new ConfigurationViewModel("Cylinder #sides prism", 70)
         };
-
-
         public WriteableBitmap Bitmap
         {
             get => _bitmap;
@@ -107,11 +102,11 @@ namespace ImageEditor.ViewModel
             _pixels = new byte[BitmapHeight, BitmapWidth, 4];
             ResetBitmap();
             DrawShapesCommand = new RelayCommand(DrawShapes);
-            ChangeConfigurationCommand = new RelayCommand(ChangeConfiguration);
-            ChangeConfiguration();
+            ChangeConfigurationCommand = new RelayCommand(ChangeSettings);
+            ChangeSettings();
         }
 
-        private void ChangeConfiguration()
+        private void ChangeSettings()
         {
             //sphere
             _sphereR = SphereSettings.First(c => c.Description == "Radius").Value;
@@ -164,34 +159,34 @@ namespace ImageEditor.ViewModel
             var cy = _sphereCy;
 
             double s = cx * (1 / Math.Tan(theta / 2));
-            e = e / 1000.0;
+            var e1 = e / 1000.0;
 
-            P1 = new[]
+            var p1 = new[]
             {
-                new[] {s, 0, cx, (s*e)/2},
+                new[] {s, 0, cx, (s*e1)/2},
                 new[] {0, -s, cy, 0},
                 new double[] {0, 0, 0, 1},
                 new double[] {0, 0, 1, 0}
             };
-            P2 = new[]
+            var p2 = new[]
             {
-                new[] {s, 0, cx, -(s*e)/2},
+                new[] {s, 0, cx, -(s*e1)/2},
                 new[] {0, -s, cy, 0},
                 new double[] {0, 0, 0, 1},
                 new double[] {0, 0, 1, 0}
             };
 
-            _verticesL = CreateSphereVertices();
-            _verticesR = CreateSphereVertices();
+            var verticesL = CreateSphereVertices();
+            var verticesR = CreateSphereVertices();
 
-            TransformAndProject(P1, _verticesL, _sphereRx, _sphereRy);
-            TransformAndProject(P2, _verticesR, _sphereRx, _sphereRy);
+            TransformAndProject(p1, verticesL, _sphereRx, _sphereRy);
+            TransformAndProject(p2, verticesR, _sphereRx, _sphereRy);
 
-            _trianglesL = CreateSphereTriangles(_verticesL);
-            _trianglesR = CreateSphereTriangles(_verticesR);
+            var trianglesL = CreateSphereTriangles(verticesL);
+            var trianglesR = CreateSphereTriangles(verticesR);
 
-            DrawMesh(_trianglesL, Color.FromRgb(255, 0, 0));
-            DrawMesh(_trianglesR, Color.FromRgb(0, 255, 255));
+            DrawMesh(trianglesL, Color.FromRgb(255, 0, 0));
+            DrawMesh(trianglesR, Color.FromRgb(0, 255, 255));
         }
 
         public void DrawCuboid()
@@ -200,34 +195,35 @@ namespace ImageEditor.ViewModel
             var cy = _cuboidCy;
 
             double s = cx * (1 / Math.Tan(theta / 2));
-            e = e / 1000.0;
+            var e1 = e / 1000.0;
 
-            P1 = new[]
+            var p1 = new[]
             {
-                new[] {s, 0, cx, (s*e)/2},
+                new[] {s, 0, cx, (s*e1)/2},
                 new[] {0, -s, cy, 0},
                 new double[] {0, 0, 0, 1},
                 new double[] {0, 0, 1, 0}
             };
-            P2 = new[]
+            var p2 = new[]
             {
-                new[] {s, 0, cx, -(s*e)/2},
+                new[] {s, 0, cx, -(s*e1)/2},
                 new[] {0, -s, cy, 0},
                 new double[] {0, 0, 0, 1},
                 new double[] {0, 0, 1, 0}
             };
 
-            _verticesL = CreateCuboidVertices();
-            _verticesR = CreateCuboidVertices();
+            var verticesL = CreateCuboidVertices();
+            var verticesR = CreateCuboidVertices();
 
-            TransformAndProject(P1, _verticesL, _cuboidRx, _cuboidRy);
-            TransformAndProject(P2, _verticesR, _cuboidRx, _cuboidRy);
+            TransformAndProject(p1, verticesL, _cuboidRx, _cuboidRy);
+            TransformAndProject(p2, verticesR, _cuboidRx, _cuboidRy);
 
-            _trianglesL = CreateCuboidTriangles(_verticesL);
-            _trianglesR = CreateCuboidTriangles(_verticesR);
+            var trianglesL = CreateCuboidTriangles(verticesL);
+            var trianglesR = CreateCuboidTriangles(verticesR);
 
-            DrawMesh(_trianglesL, Color.FromRgb(255, 0, 0));
-            DrawMesh(_trianglesR, Color.FromRgb(0, 255, 255));
+
+            DrawMesh(trianglesR, Color.FromRgb(0, 255, 255));
+            DrawMesh(trianglesL, Color.FromRgb(255, 0, 0));
         }
 
         public void DrawCylinder()
@@ -236,34 +232,34 @@ namespace ImageEditor.ViewModel
             var cy = _cylinderCy;
 
             double s = cx * (1 / Math.Tan(theta / 2));
-            e = e / 1000.0;
+            var e1 = e / 1000.0;
 
-            P1 = new[]
+            var p1 = new[]
             {
-                new[] {s, 0, cx, (s*e)/2},
+                new[] {s, 0, cx, (s*e1)/2},
                 new[] {0, -s, cy, 0},
                 new double[] {0, 0, 0, 1},
                 new double[] {0, 0, 1, 0}
             };
-            P2 = new[]
+            var p2 = new[]
             {
-                new[] {s, 0, cx, -(s*e)/2},
+                new[] {s, 0, cx, -(s*e1)/2},
                 new[] {0, -s, cy, 0},
                 new double[] {0, 0, 0, 1},
                 new double[] {0, 0, 1, 0}
             };
 
-            _verticesL = CreateCylinderVertices();
-            _verticesR = CreateCylinderVertices();
+            var verticesL = CreateCylinderVertices();
+            var verticesR = CreateCylinderVertices();
 
-            TransformAndProject(P1, _verticesL, _cylinderRx, _cylinderRy);
-            TransformAndProject(P2, _verticesR, _cylinderRx, _cylinderRy);
+            TransformAndProject(p1, verticesL, _cylinderRx, _cylinderRy);
+            TransformAndProject(p2, verticesR, _cylinderRx, _cylinderRy);
 
-            _trianglesL = CreateCylinderTriangles(_verticesL);
-            _trianglesR = CreateCylinderTriangles(_verticesR);
+            var trianglesL = CreateCylinderTriangles(verticesL);
+            var trianglesR = CreateCylinderTriangles(verticesR);
 
-            DrawMesh(_trianglesL, Color.FromRgb(255, 0, 0));
-            DrawMesh(_trianglesR, Color.FromRgb(0, 255, 255));
+            DrawMesh(trianglesL, Color.FromRgb(255, 0, 0));
+            DrawMesh(trianglesR, Color.FromRgb(0, 255, 255));
         }
 
         private Vertex[] CreateCuboidVertices()
@@ -378,7 +374,7 @@ namespace ImageEditor.ViewModel
                 new[] { -Math.Sin(alphaY), 0, Math.Cos(alphaY), 0 },
                 new[] { 0, 0, 0, 1.0 }
             };
-            T = MatrixMultiply(MatrixMultiply(t, rx), ry);
+            var T = MatrixMultiply(MatrixMultiply(t, rx), ry);
             foreach (var v in vertices)
             {
                 var pointMatrix = MatrixMultiply(MatrixMultiply(p, T), v.GetP());
@@ -499,26 +495,26 @@ namespace ImageEditor.ViewModel
 
         private void DrawMesh(Triangle[] triangles, Color color)
         {
-            foreach (var t in triangles)
+            foreach (var triangle in triangles)
             { // Check if third component of cross product is positive
-                if ((t.GetV2().GetX() - t.GetV1().GetX())
-                    * (t.GetV3().GetY() - t.GetV1().GetY())
-                    - (t.GetV2().GetY() - t.GetV1().GetY())
-                    * (t.GetV3().GetX() - t.GetV1().GetX()) > 0)
+                if ((triangle.GetV2().GetX() - triangle.GetV1().GetX())
+                    * (triangle.GetV3().GetY() - triangle.GetV1().GetY())
+                    - (triangle.GetV2().GetY() - triangle.GetV1().GetY())
+                    * (triangle.GetV3().GetX() - triangle.GetV1().GetX()) > 0)
                 {
-                    DrawTriangle(t, color);
+                    DrawTriangle(triangle, color);
                 }
             }
         }
 
-        private void DrawTriangle(Triangle t, Color color)
+        private void DrawTriangle(Triangle triangle, Color color)
         {
-            DrawWuLine(new Point(t.GetV1().GetX(), t.GetV1().GetY()),
-                new Point(t.GetV2().GetX(), t.GetV2().GetY()), color);
-            DrawWuLine(new Point(t.GetV2().GetX(), t.GetV2().GetY()),
-                new Point(t.GetV3().GetX(), t.GetV3().GetY()), color);
-            DrawWuLine(new Point(t.GetV3().GetX(), t.GetV3().GetY()),
-                new Point(t.GetV1().GetX(), t.GetV1().GetY()), color);
+            DrawWuLine(new Point(triangle.GetV1().GetX(), triangle.GetV1().GetY()),
+                new Point(triangle.GetV2().GetX(), triangle.GetV2().GetY()), color);
+            DrawWuLine(new Point(triangle.GetV2().GetX(), triangle.GetV2().GetY()),
+                new Point(triangle.GetV3().GetX(), triangle.GetV3().GetY()), color);
+            DrawWuLine(new Point(triangle.GetV3().GetX(), triangle.GetV3().GetY()),
+                new Point(triangle.GetV1().GetX(), triangle.GetV1().GetY()), color);
         }
 
         #region draw line & point
@@ -583,9 +579,17 @@ namespace ImageEditor.ViewModel
         private void DrawPoint(Point p, Color color)
         {
             if (p.X >= BitmapWidth || p.X <= 0 || p.Y >= BitmapHeight || p.Y <= 0) return;
+            //if (_pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 0] == CanvasColor)
+            //{
+            //    _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 0] = 0;
+            //    _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 1] = 0;
+            //    _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 2] = 0;
+            //    return;
+            //}
+           
             _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 0] = color.B;
             _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 1] = color.G;
-            _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 2] = color.R;
+            _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 2] = color.R;            
         }
         #endregion
 
