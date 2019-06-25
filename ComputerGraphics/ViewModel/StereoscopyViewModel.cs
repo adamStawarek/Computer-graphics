@@ -579,17 +579,21 @@ namespace ImageEditor.ViewModel
         private void DrawPoint(Point p, Color color)
         {
             if (p.X >= BitmapWidth || p.X <= 0 || p.Y >= BitmapHeight || p.Y <= 0) return;
-            //if (_pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 0] == CanvasColor)
-            //{
-            //    _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 0] = 0;
-            //    _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 1] = 0;
-            //    _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 2] = 0;
-            //    return;
-            //}
+            if (color.R == 0)
+            {
+                _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 2] = color.R;
+            }
            
-            _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 0] = color.B;
-            _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 1] = color.G;
-            _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 2] = color.R;            
+            if (color.G == 0)
+            {
+                _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 1] = color.G;
+            }
+          
+
+            if (color.B == 0)
+            {
+                _pixels[(int)Math.Round(p.Y), (int)Math.Round(p.X), 0] = color.B;
+            }        
         }
         #endregion
 
